@@ -58,6 +58,9 @@ class MainActivity : AppCompatActivity() {
 
         setupNavigation(savedInstanceState)
         requestNotificationPermission()
+        if (intent.getBooleanExtra(EXTRA_OPEN_MORE, false)) {
+            binding.bottomNavigation.selectedItemId = R.id.nav_more
+        }
         if (!repository.hasSession && repository.state.value.currentSchedule == null) {
             showLogin()
             return
@@ -145,10 +148,14 @@ class MainActivity : AppCompatActivity() {
         if (intent.getBooleanExtra(EXTRA_OPEN_TODAY, false)) {
             binding.bottomNavigation.selectedItemId = R.id.nav_today
         }
+        if (intent.getBooleanExtra(EXTRA_OPEN_MORE, false)) {
+            binding.bottomNavigation.selectedItemId = R.id.nav_more
+        }
     }
 
     companion object {
         const val EXTRA_OPEN_TODAY = "open_today"
+        const val EXTRA_OPEN_MORE = "open_more"
         const val EXTRA_LOGIN_MESSAGE = "login_message"
     }
 }

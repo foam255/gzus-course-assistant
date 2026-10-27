@@ -9,6 +9,10 @@ import com.gzus.courseassistant.data.sync.AppRepository
 import com.gzus.courseassistant.notifications.CourseReminderWorker
 import com.gzus.courseassistant.notifications.NotificationHelper
 import com.gzus.courseassistant.data.sync.SyncWorker
+import com.gzus.courseassistant.data.update.UpdateChecker
+import com.gzus.courseassistant.data.update.UpdateCheckWorker
+import com.gzus.courseassistant.data.update.UpdateManager
+import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 import androidx.work.BackoffPolicy
 import androidx.work.Constraints
@@ -57,17 +61,38 @@ class CourseApplication : Application() {
             ExistingPeriodicWorkPolicy.UPDATE,
             reminderRequest,
         )
+
+        val updateRequest = PeriodicWorkRequestBuilder<UpdateCheckWorker>(
+            24,
+            TimeUnit.HOURS,
+        ).setConstraints(
+            Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build(),
+        ).build()
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            UPDATE_WORK,
+            ExistingPeriodicWorkPolicy.UPDATE,
+            updateRequest,
+        )
     }
 
     private companion object {
         const val SYNC_WORK = "daily-course-sync"
         const val REMINDER_WORK = "course-reminders"
+        const val UPDATE_WORK = "daily-update-check"
     }
 }
 
 class AppContainer(private val application: Application) {
     private val secureStore = SecureFileStore(application)
     val settings = AppSettings(application)
+    private val updateHttpClient = OkHttpClient.Builder()
+        .connectTimeout(15, TimeUnit.SECONDS)
+        .readTimeout(60, TimeUnit.SECONDS)
+        .followRedirects(true)
+        .followSslRedirects(true)
+        .build()
 
     val cookieJar = StoredCookieJar(
         initialCookies = StoredCookieJar.fromJson(secureStore.read(COOKIE_FILE)),
@@ -83,6 +108,11 @@ class AppContainer(private val application: Application) {
         cookieJar = cookieJar,
         client = client,
         settings = settings,
+    )
+    val updateManager = UpdateManager(
+        context = application,
+        checker = UpdateChecker(updateHttpClient),
+        client = updateHttpClient,
     )
 
     private companion object {

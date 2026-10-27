@@ -94,6 +94,22 @@
     <string name="more_logout">退出并保留缓存</string>
     <string name="more_clear">清空全部本地数据</string>
     <string name="more_about">关于与隐私</string>
+    <string name="check_update">检查更新</string>
+    <string name="checking_update">正在检查更新</string>
+    <string name="update_latest">当前已是最新版本</string>
+    <string name="update_check_failed">检查更新失败，请确认网络能够访问 GitHub</string>
+    <string name="update_available_title">发现新版本 %1$s</string>
+    <string name="update_available_message">当前版本：%1$s\n最新版本：%2$s\n\n下载后将校验安装包并打开系统安装界面。</string>
+    <string name="download_update">下载更新</string>
+    <string name="later">稍后</string>
+    <string name="downloading_update">正在下载版本 %1$s</string>
+    <string name="update_download_failed">更新下载或校验失败</string>
+    <string name="update_signature_invalid">安装包校验失败，已停止安装</string>
+    <string name="update_allow_install">请允许“课表轻助”安装应用，然后重新检查更新</string>
+    <string name="update_download_percent">%1$d%%</string>
+    <string name="update_notification_channel">应用更新</string>
+    <string name="update_notification_title">发现课表轻助 %1$s</string>
+    <string name="update_notification_message">打开“更多”页面下载并安装更新</string>
     <string name="reminder_title">课程提醒</string>
     <string name="reminder_off">关闭提醒</string>
     <string name="reminder_5">提前 5 分钟</string>
@@ -110,6 +126,12 @@
     <string name="cancel">取消</string>
     <string name="about_title">关于课表轻助</string>
     <string name="about_message">本应用仅使用本人账号已有权限查询课程、成绩和考试信息。账号密码不会保存，同步数据仅存放在本机应用私有目录。</string>
+    <string name="about_author">作者：foam255</string>
+    <string name="about_github">GitHub：%1$s</string>
+    <string name="about_star">如果觉得这个项目有帮助，欢迎在 GitHub 仓库点一颗 Star。</string>
+    <string name="star_on_github">去点 Star</string>
+    <string name="open_link_failed">无法打开 GitHub 链接</string>
+    <string name="github_repository_url" translatable="false">https://github.com/foam255/gzus-course-assistant</string>
     <string name="version_format">版本 %1$s</string>
     <string name="net_error">网络连接失败，请检查当前网络是否能访问学校系统。</string>
     <string name="unknown_error">发生未知错误</string>

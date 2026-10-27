@@ -22,14 +22,22 @@ import java.time.LocalDate
 import java.time.LocalTime
 
 object NotificationHelper {
-    private const val CHANNEL = "course_reminders"
+    private const val COURSE_CHANNEL = "course_reminders"
+    private const val UPDATE_CHANNEL = "app_updates"
 
     fun createChannels(context: Context) {
         val manager = context.getSystemService(NotificationManager::class.java)
         manager.createNotificationChannel(
             NotificationChannel(
-                CHANNEL,
+                COURSE_CHANNEL,
                 context.getString(R.string.notification_channel),
+                NotificationManager.IMPORTANCE_DEFAULT,
+            ),
+        )
+        manager.createNotificationChannel(
+            NotificationChannel(
+                UPDATE_CHANNEL,
+                context.getString(R.string.update_notification_channel),
                 NotificationManager.IMPORTANCE_DEFAULT,
             ),
         )
@@ -65,7 +73,7 @@ object NotificationHelper {
                 append(course.teacher)
             }
         }
-        val notification = NotificationCompat.Builder(context, CHANNEL)
+        val notification = NotificationCompat.Builder(context, COURSE_CHANNEL)
             .setSmallIcon(R.drawable.ic_calendar)
             .setContentTitle("${minutesBefore} 分钟后 · ${course.name}")
             .setContentText(content)
@@ -74,6 +82,32 @@ object NotificationHelper {
             .setContentIntent(pendingIntent)
             .build()
         NotificationManagerCompat.from(context).notify(course.id.hashCode(), notification)
+    }
+
+    @SuppressLint("MissingPermission")
+    fun notifyUpdate(context: Context, versionName: String) {
+        if (!canPostNotifications(context)) return
+        val intent = Intent(context, MainActivity::class.java)
+            .putExtra(MainActivity.EXTRA_OPEN_MORE, true)
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            UPDATE_NOTIFICATION_ID,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+        val notification = NotificationCompat.Builder(context, UPDATE_CHANNEL)
+            .setSmallIcon(R.drawable.ic_download)
+            .setContentTitle(
+                context.getString(R.string.update_notification_title, versionName),
+            )
+            .setContentText(context.getString(R.string.update_notification_message))
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+            .build()
+        NotificationManagerCompat.from(context).notify(
+            UPDATE_NOTIFICATION_ID,
+            notification,
+        )
     }
 
     fun canPostNotifications(context: Context): Boolean =
@@ -109,4 +143,6 @@ object NotificationHelper {
         minutesBefore = minutesBefore,
         firstWeekStart = firstWeekStart,
     ).firstOrNull()
+
+    private const val UPDATE_NOTIFICATION_ID = 21001
 }

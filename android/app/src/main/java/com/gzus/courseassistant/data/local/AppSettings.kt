@@ -19,6 +19,12 @@ class AppSettings(context: Context) {
             preferences.edit().putStringSet(KEY_REMINDED_KEYS, value.toSet()).apply()
         }
 
+    var lastNotifiedUpdateVersion: String
+        get() = preferences.getString(KEY_LAST_NOTIFIED_UPDATE, "").orEmpty()
+        set(value) {
+            preferences.edit().putString(KEY_LAST_NOTIFIED_UPDATE, value).apply()
+        }
+
     fun clearAll() {
         preferences.edit().clear().apply()
     }
@@ -26,5 +32,6 @@ class AppSettings(context: Context) {
     private companion object {
         const val KEY_REMINDER = "reminder_minutes"
         const val KEY_REMINDED_KEYS = "reminded_keys"
+        const val KEY_LAST_NOTIFIED_UPDATE = "last_notified_update"
     }
 }

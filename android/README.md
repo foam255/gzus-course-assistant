@@ -17,6 +17,8 @@
 - 课表仅显示周一至周五，不再绘制周末列。
 - 课程卡使用实色块、居中多行课名和底部教室，版式参考“课不要”小程序。
 - 当前学期与周次可导出为完整 PNG 图片并保存到系统相册。
+- 每 24 小时检查 GitHub Releases，发现新版本时通知用户。
+- 支持在“更多”页面手动检查、下载、校验签名并调起系统安装。
 - 每学期可手动设置第一周星期一，未设置时按内置日期或系统日期自动计算周次。
 - 成绩、考试、公开校历与离线缓存。
 - 每 24 小时尝试同步一次，每 15 分钟检查课程提醒。
@@ -84,6 +86,26 @@ Android 端不会读取项目根目录中的 `data/schedule.json` 或 Cookie，�
 
 未提供 `keystore.properties` 时，Release 构建会回退到调试签名，仍可侧载，
 但不适合作为长期升级包发布。
+
+## GitHub 更新发布
+
+应用通过以下固定地址检查最新 Release：
+
+```text
+https://github.com/foam255/gzus-course-assistant/releases/latest
+```
+
+发布新版本时：
+
+1. 同时提高 `versionCode` 和 `versionName`。
+2. 使用同一 Release 签名构建 `app-release.apk`。
+3. 创建形如 `v1.4.0` 的 Git 标签和 GitHub Release。
+4. 将 APK 以固定名称 `app-release.apk` 上传为 Release 附件。
+5. 发布 Release，不要保留为草稿。
+
+App 下载后会校验包名、版本号和签名证书摘要，然后打开
+Android 系统安装界面。侧载应用无法静默安装，用户必须确认安装，并在首次
+更新时允许“课表轻助”安装未知应用。
 
 ## 测试
 

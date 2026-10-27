@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>课程表</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/static/style.css" />
+    <script src="/static/vendor/lucide.min.js" defer></script>
+    <script src="/static/app.js" defer></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">
+            <i data-lucide="calendar-days"></i>
+          </span>
+          <div>
+            <p class="brand-kicker">广州软件学院</p>
+            <strong>课程表</strong>
+          </div>
+        </div>
+
+        <div class="topbar-actions">
+          <span class="sync-state" id="syncState">等待同步</span>
+          <button class="button button-primary" id="syncButton" type="button">
+            <i data-lucide="refresh-cw"></i>
+            <span>同步</span>
+          </button>
+          <button
+            class="icon-button"
+            id="sessionButton"
+            type="button"
+            aria-label="管理本地登录会话"
+            title="管理本地登录会话"
+          >
+            <i data-lucide="key-round"></i>
+          </button>
+        </div>
+      </header>
+
+      <main class="page">
+        <section class="schedule-heading" aria-labelledby="pageTitle">
+          <div class="heading-copy">
+            <p class="term-label" id="termLabel">当前学期</p>
+            <h1 id="pageTitle">课程表</h1>
+            <p class="sync-detail" id="syncDetail">尚未从教务系统同步</p>
+          </div>
+
+          <div class="week-control" aria-label="周次切换">
+            <button
+              class="icon-button"
+              id="previousWeek"
+              type="button"
+              aria-label="上一周"
+              title="上一周"
+            >
+              <i data-lucide="chevron-left"></i>
+            </button>
+            <button class="week-current" id="currentWeekButton" type="button">
+              第 1 周
+            </button>
+            <button
+              class="icon-button"
+              id="nextWeek"
+              type="button"
+              aria-label="下一周"
+              title="下一周"
+            >
+              <i data-lucide="chevron-right"></i>
+            </button>
+            <button class="text-button" id="todayButton" type="button">
+              回到本周
+            </button>
+          </div>
+        </section>
+
+        <div class="notice" id="errorBanner" role="alert" hidden>
+          <i data-lucide="circle-alert"></i>
+          <span id="errorText"></span>
+          <button
+            class="icon-button notice-close"
+            id="dismissError"
+            type="button"
+            aria-label="关闭提示"
+            title="关闭提示"
+          >
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+
+        <section class="loading-panel" id="loadingPanel" aria-live="polite">
+          <div class="loading-line loading-line-wide"></div>
+          <div class="loading-line"></div>
+          <div class="loading-grid">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+        </section>
+
+        <section class="empty-panel" id="emptyPanel" hidden>
+          <span class="empty-icon" aria-hidden="true">
+            <i data-lucide="calendar-plus"></i>
+          </span>
+          <h2>还没有本地课表</h2>
+          <p>登录学校教务系统后会拉取当前学期课程，并保存在这台电脑上。</p>
+          <button class="button button-primary" id="emptyLoginButton" type="button">
+            <i data-lucide="log-in"></i>
+            <span>连接教务系统</span>
+          </button>
+        </section>
+
+        <section class="schedule-view" id="scheduleView" hidden>
+          <div class="schedule-summary">
+            <div>
+              <span class="summary-label">本周课程</span>
+              <strong id="courseCount">0</strong>
+            </div>
+            <div>
+              <span class="summary-label">当前学生</span>
+              <strong id="studentName">已连接</strong>
+            </div>
+            <div class="summary-week">
+              <span class="summary-label">显示日期</span>
+              <strong id="weekRange">-</strong>
+            </div>
+          </div>
+
+          <div class="desktop-schedule-wrap">
+            <div class="schedule-grid" id="desktopGrid"></div>
+          </div>
+
+          <div class="mobile-schedule" id="mobileSchedule">
+            <div class="day-tabs" id="dayTabs" role="tablist"></div>
+            <div class="mobile-course-list" id="mobileCourseList"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <dialog class="login-dialog" id="loginDialog">
+      <form class="login-form" id="loginForm">
+        <div class="dialog-heading">
+          <div>
+            <p class="term-label">CAS · 统一身份认证</p>
+            <h2>连接学校账号</h2>
+          </div>
+          <button
+            class="icon-button"
+            id="closeLoginButton"
+            type="button"
+            aria-label="关闭登录窗口"
+            title="关闭登录窗口"
+          >
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+
+        <label class="field">
+          <span>学号</span>
+          <input
+            id="username"
+            name="username"
+            type="text"
+            autocomplete="username"
+            inputmode="numeric"
+            required
+          />
+        </label>
+
+        <label class="field">
+          <span>验证码</span>
+          <div class="captcha-field">
+            <input
+              id="captchaCode"
+              name="captchaCode"
+              type="text"
+              autocomplete="off"
+              inputmode="numeric"
+              maxlength="4"
+              required
+            />
+            <button
+              class="captcha-image-button"
+              id="refreshCaptcha"
+              type="button"
+              aria-label="刷新验证码"
+              title="刷新验证码"
+            >
+              <img id="captchaImage" alt="验证码" />
+              <span id="captchaPlaceholder">加载</span>
+              <i data-lucide="refresh-cw"></i>
+            </button>
+          </div>
+        </label>
+
+        <label class="field">
+          <span>密码</span>
+          <div class="password-field">
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              required
+            />
+            <button
+              class="icon-button password-toggle"
+              id="togglePassword"
+              type="button"
+              aria-label="显示密码"
+              title="显示密码"
+            >
+              <i data-lucide="eye"></i>
+            </button>
+          </div>
+        </label>
+
+        <label class="field">
+          <span>学期</span>
+          <input
+            id="term"
+            name="term"
+            type="text"
+            placeholder="留空则自动识别，例如 2026-2027-1"
+          />
+        </label>
+
+        <label class="check-field">
+          <input id="rememberSession" type="checkbox" checked />
+          <span>在本机保留登录会话</span>
+        </label>
+
+        <p class="privacy-note">
+          密码只会提交给 <strong>cas.gzus.edu.cn</strong>，不会写入本地文件。
+        </p>
+
+        <p class="form-error" id="loginError" role="alert" hidden></p>
+
+        <button class="button button-primary login-submit" id="loginButton" type="submit">
+          <i data-lucide="log-in"></i>
+          <span>登录并同步</span>
+        </button>
+      </form>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  </body>
+</html>

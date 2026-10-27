@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.CourseAssistant" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryVariant">@color/primary_dark</item>
+        <item name="colorSecondary">@color/accent</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="android:colorBackground">@color/canvas</item>
+        <item name="android:fontFamily">sans</item>
+        <item name="android:navigationBarColor">@color/canvas</item>
+        <item name="android:statusBarColor">@color/canvas</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="materialButtonStyle">@style/Widget.CourseAssistant.Button</item>
+        <item name="textInputStyle">@style/Widget.CourseAssistant.TextInput</item>
+        <item name="android:windowBackground">@color/canvas</item>
+        <item name="android:forceDarkAllowed" tools:targetApi="q">false</item>
+    </style>
+
+    <style name="Widget.CourseAssistant.Button" parent="Widget.MaterialComponents.Button">
+        <item name="android:minHeight">44dp</item>
+        <item name="cornerRadius">7dp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:letterSpacing">0</item>
+    </style>
+
+    <style name="Widget.CourseAssistant.OutlinedButton" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="android:minHeight">48dp</item>
+        <item name="cornerRadius">7dp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="strokeColor">@color/line</item>
+        <item name="android:textColor">@color/ink</item>
+    </style>
+
+    <style name="Widget.CourseAssistant.TextInput" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxCornerRadiusTopStart">7dp</item>
+        <item name="boxCornerRadiusTopEnd">7dp</item>
+        <item name="boxCornerRadiusBottomStart">7dp</item>
+        <item name="boxCornerRadiusBottomEnd">7dp</item>
+        <item name="boxStrokeColor">@color/primary</item>
+        <item name="hintTextColor">@color/muted</item>
+    </style>
+
+    <style name="TextAppearance.CourseAssistant.PageTitle" parent="TextAppearance.MaterialComponents.Headline5">
+        <item name="android:textColor">@color/ink</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0</item>
+    </style>
+
+    <style name="TextAppearance.CourseAssistant.SectionTitle" parent="TextAppearance.MaterialComponents.Subtitle1">
+        <item name="android:textColor">@color/ink</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0</item>
+    </style>
+
+    <style name="TextAppearance.CourseAssistant.Body" parent="TextAppearance.MaterialComponents.Body2">
+        <item name="android:textColor">@color/muted</item>
+        <item name="android:letterSpacing">0</item>
+    </style>
+
+    <style name="Widget.CourseAssistant.Toolbar" parent="Widget.MaterialComponents.Toolbar.Primary">
+        <item name="android:background">@color/surface</item>
+        <item name="titleTextColor">@color/ink</item>
+        <item name="subtitleTextColor">@color/muted</item>
+        <item name="navigationIconTint">@color/ink</item>
+    </style>
+</resources>

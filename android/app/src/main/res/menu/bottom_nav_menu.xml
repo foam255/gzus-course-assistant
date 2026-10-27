@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_today"
+        android:icon="@drawable/ic_today"
+        android:title="@string/nav_today" />
+    <item
+        android:id="@+id/nav_timetable"
+        android:icon="@drawable/ic_calendar"
+        android:title="@string/nav_timetable" />
+    <item
+        android:id="@+id/nav_academics"
+        android:icon="@drawable/ic_school"
+        android:title="@string/nav_academics" />
+    <item
+        android:id="@+id/nav_more"
+        android:icon="@drawable/ic_more"
+        android:title="@string/nav_more" />
+</menu>

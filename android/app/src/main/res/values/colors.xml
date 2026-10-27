@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="canvas">#EEF2F1</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="surface_alt">#F6F8F7</color>
+    <color name="ink">#17212B</color>
+    <color name="muted">#667085</color>
+    <color name="line">#DFE4E2</color>
+    <color name="primary">#0F766E</color>
+    <color name="primary_dark">#0B5F58</color>
+    <color name="accent">#D95D39</color>
+    <color name="danger">#B42318</color>
+    <color name="danger_soft">#FFF2EF</color>
+    <color name="success_soft">#E8F3F1</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+</resources>

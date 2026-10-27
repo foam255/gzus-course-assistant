@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/canvas"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="20dp"
+        android:paddingTop="20dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="28dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/more_title"
+            android:textAppearance="@style/TextAppearance.CourseAssistant.PageTitle" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:background="@drawable/bg_surface_soft"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/more_account"
+                android:textAppearance="@style/TextAppearance.CourseAssistant.SectionTitle" />
+
+            <TextView
+                android:id="@+id/accountStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:textAppearance="@style/TextAppearance.CourseAssistant.Body" />
+
+            <TextView
+                android:id="@+id/syncStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:textAppearance="@style/TextAppearance.CourseAssistant.Body"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/termStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:textAppearance="@style/TextAppearance.CourseAssistant.Body"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/firstWeekStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:textAppearance="@style/TextAppearance.CourseAssistant.Body"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/calendarButton"
+            style="@style/Widget.CourseAssistant.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:gravity="start|center_vertical"
+            android:text="@string/more_calendar"
+            app:icon="@drawable/ic_calendar"
+            app:iconGravity="textStart"
+            app:iconTint="@color/ink" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/reminderButton"
+            style="@style/Widget.CourseAssistant.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="start|center_vertical"
+            android:text="@string/more_reminder"
+            app:icon="@drawable/ic_today"
+            app:iconGravity="textStart"
+            app:iconTint="@color/ink" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/syncButton"
+            style="@style/Widget.CourseAssistant.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="start|center_vertical"
+            android:text="@string/more_sync"
+            app:icon="@drawable/ic_refresh"
+            app:iconGravity="textStart"
+            app:iconTint="@color/ink" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/firstWeekButton"
+            style="@style/Widget.CourseAssistant.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="start|center_vertical"
+            android:text="@string/more_first_week"
+            app:icon="@drawable/ic_calendar"
+            app:iconGravity="textStart"
+            app:iconTint="@color/ink" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/reloginButton"
+            style="@style/Widget.CourseAssistant.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="start|center_vertical"
+            android:text="@string/more_relogin"
+            app:icon="@drawable/ic_lock"
+            app:iconGravity="textStart"
+            app:iconTint="@color/ink" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/logoutButton"
+            style="@style/Widget.CourseAssistant.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="start|center_vertical"
+            android:text="@string/more_logout"
+            app:icon="@drawable/ic_lock"
+            app:iconGravity="textStart"
+            app:iconTint="@color/danger" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/clearButton"
+            style="@style/Widget.CourseAssistant.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="start|center_vertical"
+            android:text="@string/more_clear"
+            app:icon="@drawable/ic_delete"
+            app:iconGravity="textStart"
+            app:iconTint="@color/danger" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/aboutButton"
+            style="@style/Widget.CourseAssistant.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="start|center_vertical"
+            android:text="@string/more_about"
+            app:icon="@drawable/ic_info"
+            app:iconGravity="textStart"
+            app:iconTint="@color/ink" />
+
+        <TextView
+            android:id="@+id/versionText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:gravity="center"
+            android:textAppearance="@style/TextAppearance.CourseAssistant.Body"
+            android:textSize="12sp" />
+    </LinearLayout>
+</ScrollView>

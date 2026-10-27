@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/canvas"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="20dp"
+        android:paddingTop="20dp"
+        android:paddingEnd="16dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/timetable_title"
+            android:textAppearance="@style/TextAppearance.CourseAssistant.PageTitle" />
+
+        <ImageButton
+            android:id="@+id/exportButton"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/export_timetable"
+            android:padding="10dp"
+            android:src="@drawable/ic_download"
+            android:tooltipText="@string/export_timetable"
+            app:tint="@color/ink" />
+
+        <ImageButton
+            android:id="@+id/syncButton"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/sync_now"
+            android:padding="10dp"
+            android:src="@drawable/ic_refresh"
+            app:tint="@color/ink" />
+    </LinearLayout>
+
+    <Spinner
+        android:id="@+id/termSpinner"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="20dp"
+        android:background="@drawable/bg_surface_soft"
+        android:contentDescription="@string/choose_term"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="20dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/previousWeekButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/previous_week"
+            android:src="@drawable/ic_chevron_left"
+            app:tint="@color/ink" />
+
+        <TextView
+            android:id="@+id/weekText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:textAppearance="@style/TextAppearance.CourseAssistant.SectionTitle" />
+
+        <ImageButton
+            android:id="@+id/nextWeekButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/next_week"
+            android:src="@drawable/ic_chevron_right"
+            app:tint="@color/ink" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/currentWeekButton"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:minWidth="0dp"
+            android:text="@string/current_week"
+            android:textAllCaps="false" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/weekRangeText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="20dp"
+        android:paddingTop="2dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="2dp"
+        android:textAppearance="@style/TextAppearance.CourseAssistant.Body"
+        android:textSize="12sp" />
+
+    <TextView
+        android:id="@+id/weekLegend"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="8dp"
+        android:textAppearance="@style/TextAppearance.CourseAssistant.Body"
+        android:textSize="11sp" />
+
+    <ScrollView
+        android:id="@+id/timetableScroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="16dp">
+
+        <com.gzus.courseassistant.ui.timetable.TimetableView
+            android:id="@+id/timetableView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </ScrollView>
+
+    <TextView
+        android:id="@+id/emptyText"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:padding="32dp"
+        android:text="@string/no_weekly_courses"
+        android:textAppearance="@style/TextAppearance.CourseAssistant.Body"
+        android:visibility="gone" />
+</LinearLayout>

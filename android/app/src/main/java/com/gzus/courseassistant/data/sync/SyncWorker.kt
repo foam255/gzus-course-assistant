@@ -6,7 +6,7 @@ import androidx.work.WorkerParameters
 import com.gzus.courseassistant.CourseApplication
 import com.gzus.courseassistant.data.network.JwxtException
 import com.gzus.courseassistant.data.network.SessionExpiredException
-import com.gzus.courseassistant.widget.NextCourseWidgetProvider
+import com.gzus.courseassistant.widget.WidgetViews
 
 class SyncWorker(
     appContext: Context,
@@ -15,7 +15,7 @@ class SyncWorker(
     override suspend fun doWork(): Result = try {
         sync()
     } finally {
-        NextCourseWidgetProvider.refresh(applicationContext)
+        WidgetViews.refreshAll(applicationContext)
     }
 
     private suspend fun sync(): Result {

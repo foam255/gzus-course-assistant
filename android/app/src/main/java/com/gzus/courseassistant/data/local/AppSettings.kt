@@ -11,6 +11,13 @@ class AppSettings(context: Context) {
             preferences.edit().putInt(KEY_REMINDER, value).apply()
         }
 
+    /** 最近一次同步得到的校区 id，空闲教室查询据此限定校区。 */
+    var campusId: String
+        get() = preferences.getString(KEY_CAMPUS_ID, "").orEmpty()
+        set(value) {
+            preferences.edit().putString(KEY_CAMPUS_ID, value).apply()
+        }
+
     var remindedKeys: Set<String>
         get() = preferences.getStringSet(KEY_REMINDED_KEYS, emptySet())
             ?.toSet()
@@ -64,6 +71,7 @@ class AppSettings(context: Context) {
         const val KEY_EXAM_REMINDER_LEADS = "exam_reminder_leads"
         const val KEY_EXAM_REMINDED_KEYS = "exam_reminded_keys"
         const val KEY_LAST_NOTIFIED_UPDATE = "last_notified_update"
+        const val KEY_CAMPUS_ID = "campus_id"
         val DEFAULT_EXAM_LEADS = setOf(24, 3)
     }
 }

@@ -4,11 +4,11 @@
     android:description="@string/widget_description"
     android:initialLayout="@layout/widget_next_course"
     android:minHeight="110dp"
-    android:minWidth="180dp"
+    android:minWidth="110dp"
     android:previewLayout="@layout/widget_next_course"
     android:resizeMode="horizontal|vertical"
     android:targetCellHeight="2"
-    android:targetCellWidth="3"
+    android:targetCellWidth="2"
     android:updatePeriodMillis="1800000"
     android:widgetCategory="home_screen"
     tools:targetApi="31" />

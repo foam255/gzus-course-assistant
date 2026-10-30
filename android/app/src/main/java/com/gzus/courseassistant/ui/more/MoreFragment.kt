@@ -27,7 +27,9 @@ import com.gzus.courseassistant.ui.calendar.CalendarActivity
 import com.gzus.courseassistant.ui.classroom.EmptyClassroomActivity
 import com.gzus.courseassistant.ui.main.MainActivity
 import com.gzus.courseassistant.util.UiUtils
+import com.gzus.courseassistant.widget.MiniCourseWidgetProvider
 import com.gzus.courseassistant.widget.NextCourseWidgetProvider
+import com.gzus.courseassistant.widget.TodayCoursesWidgetProvider
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.CancellationException
 import java.time.LocalDate
@@ -345,8 +347,28 @@ class MoreFragment : Fragment() {
     }
 
     private fun addHomeWidget() {
+        val labels = arrayOf(
+            getString(R.string.widget_today_name),
+            getString(R.string.widget_name),
+            getString(R.string.widget_mini_name),
+        )
+        var choice = 0
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.more_add_widget)
+            .setSingleChoiceItems(labels, choice) { _, which -> choice = which }
+            .setNegativeButton(R.string.cancel, null)
+            .setPositiveButton(R.string.confirm) { _, _ -> pinWidget(choice) }
+            .show()
+    }
+
+    private fun pinWidget(choice: Int) {
+        val providerClass = when (choice) {
+            0 -> TodayCoursesWidgetProvider::class.java
+            1 -> NextCourseWidgetProvider::class.java
+            else -> MiniCourseWidgetProvider::class.java
+        }
         val manager = AppWidgetManager.getInstance(requireContext())
-        val provider = ComponentName(requireContext(), NextCourseWidgetProvider::class.java)
+        val provider = ComponentName(requireContext(), providerClass)
         val requested = manager.isRequestPinAppWidgetSupported &&
             manager.requestPinAppWidget(provider, null, null)
         (activity as? MainActivity)?.showMessage(

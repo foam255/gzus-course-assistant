@@ -1,6 +1,8 @@
 package com.gzus.courseassistant.ui.classroom
 
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
@@ -10,6 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.gzus.courseassistant.CourseApplication
 import com.gzus.courseassistant.R
+import com.gzus.courseassistant.data.model.Classroom
 import com.gzus.courseassistant.data.model.ScheduleLogic
 import com.gzus.courseassistant.data.model.Term
 import com.gzus.courseassistant.data.network.SessionExpiredException
@@ -21,7 +24,8 @@ import java.time.LocalDate
 import java.time.LocalTime
 
 /**
- * 空闲教室：按「周次 + 星期 + 节次」查询教务当前空闲的场地。
+ * 空闲教室：按「周次 + 星期 + 节次」查询教务当前空闲的场地，
+ * 支持按楼栋筛选与教室号/名称模糊搜索（均在本地过滤，不再请求教务）。
  */
 class EmptyClassroomActivity : AppCompatActivity() {
     private lateinit var binding: ActivityEmptyClassroomBinding
@@ -32,6 +36,13 @@ class EmptyClassroomActivity : AppCompatActivity() {
     private var weekday = 1
     private var slotIndex = 0
     private var loading = false
+
+    private var allClassrooms: List<Classroom> = emptyList()
+    private var buildings: List<String> = emptyList()
+    private var selectedBuilding = 0
+    private var keyword = ""
+    private var contextLabel = ""
+    private var suppressFilter = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,6 +55,7 @@ class EmptyClassroomActivity : AppCompatActivity() {
         binding.classroomList.layoutManager = LinearLayoutManager(this)
         binding.classroomList.adapter = adapter
         setupFilters()
+        setupSearch()
         query()
     }
 
@@ -93,6 +105,35 @@ class EmptyClassroomActivity : AppCompatActivity() {
 
             override fun onNothingSelected(parent: AdapterView<*>?) = Unit
         }
+
+        binding.buildingSpinner.onItemSelectedListener =
+            object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(
+                    parent: AdapterView<*>?,
+                    view: View?,
+                    position: Int,
+                    id: Long,
+                ) {
+                    if (suppressFilter) return
+                    selectedBuilding = position
+                    applyFilter()
+                }
+
+                override fun onNothingSelected(parent: AdapterView<*>?) = Unit
+            }
+    }
+
+    private fun setupSearch() {
+        binding.searchInput.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+
+            override fun afterTextChanged(s: Editable?) {
+                keyword = s?.toString().orEmpty()
+                applyFilter()
+            }
+        })
     }
 
     private fun buildSlots(): List<ScheduleLogic.BigSlot> {
@@ -128,6 +169,12 @@ class EmptyClassroomActivity : AppCompatActivity() {
             state.firstWeekStarts[term.label],
         )
         val slot = slots.getOrNull(slotIndex) ?: return
+        contextLabel = getString(
+            R.string.classroom_context,
+            week,
+            WEEKDAY_LABELS[weekday - 1],
+            slotLabel(slot),
+        )
         loading = true
         binding.progressBar.visibility = View.VISIBLE
         binding.emptyText.visibility = View.GONE
@@ -141,18 +188,11 @@ class EmptyClassroomActivity : AppCompatActivity() {
                     periods = listOf(slot.startPeriod, slot.endPeriod),
                 )
             }.onSuccess { classrooms ->
-                adapter.submit(classrooms)
-                binding.statusText.text = getString(
-                    R.string.classroom_summary,
-                    week,
-                    WEEKDAY_LABELS[weekday - 1],
-                    slotLabel(slot),
-                    classrooms.size,
-                )
-                binding.emptyText.setText(R.string.classroom_empty)
-                binding.emptyText.visibility =
-                    if (classrooms.isEmpty()) View.VISIBLE else View.GONE
+                allClassrooms = classrooms
+                rebuildBuildingSpinner()
+                applyFilter()
             }.onFailure { error ->
+                allClassrooms = emptyList()
                 adapter.submit(emptyList())
                 binding.statusText.text = ""
                 binding.emptyText.text = when (error) {
@@ -164,6 +204,65 @@ class EmptyClassroomActivity : AppCompatActivity() {
             loading = false
             binding.progressBar.visibility = View.GONE
         }
+    }
+
+    private fun rebuildBuildingSpinner() {
+        buildings = allClassrooms
+            .map { it.building }
+            .filter { it.isNotBlank() }
+            .distinct()
+            .sorted()
+        val options = mutableListOf(getString(R.string.classroom_building_all))
+        options += buildings
+        suppressFilter = true
+        binding.buildingSpinner.adapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_dropdown_item,
+            options,
+        )
+        selectedBuilding = if (selectedBuilding in options.indices) selectedBuilding else 0
+        binding.buildingSpinner.setSelection(selectedBuilding)
+        suppressFilter = false
+    }
+
+    private fun applyFilter() {
+        if (allClassrooms.isEmpty()) {
+            adapter.submit(emptyList())
+            binding.statusText.text = contextLabel.takeIf { it.isNotBlank() }?.let {
+                getString(R.string.classroom_summary, it, 0)
+            }.orEmpty()
+            binding.emptyText.setText(R.string.classroom_empty)
+            binding.emptyText.visibility = View.VISIBLE
+            return
+        }
+        val building = buildings.getOrNull(selectedBuilding - 1)
+        val key = keyword.trim()
+        val filtered = allClassrooms.filter { room ->
+            (building == null || room.building == building) &&
+                (
+                    key.isBlank() ||
+                        room.code.contains(key, ignoreCase = true) ||
+                        room.name.contains(key, ignoreCase = true) ||
+                        room.building.contains(key, ignoreCase = true) ||
+                        room.category.contains(key, ignoreCase = true)
+                    )
+        }
+        adapter.submit(filtered)
+        val filteredOut = filtered.size != allClassrooms.size
+        binding.statusText.text = if (filteredOut) {
+            getString(
+                R.string.classroom_summary_filtered,
+                contextLabel,
+                filtered.size,
+                allClassrooms.size,
+            )
+        } else {
+            getString(R.string.classroom_summary, contextLabel, allClassrooms.size)
+        }
+        binding.emptyText.setText(
+            if (filteredOut) R.string.classroom_empty_filtered else R.string.classroom_empty,
+        )
+        binding.emptyText.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
     }
 
     private companion object {

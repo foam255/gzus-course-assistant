@@ -226,6 +226,20 @@
     <string name="widget_detail_unknown">上课时间与地点待定</string>
     <string name="widget_day_tomorrow">明天</string>
     <string name="widget_day_soon">%1$d 天后</string>
+    <string name="widget_today_name">今日课程</string>
+    <string name="widget_today_title">今日课程</string>
+    <string name="widget_today_label">今日课程 · %1$s</string>
+    <string name="widget_today_label_count">今日课程 · %1$s · %2$d 门</string>
+    <string name="widget_today_description">显示今天的所有课程，正在上的课会高亮</string>
+    <string name="widget_mini_name">下一节课·迷你</string>
+    <string name="widget_mini_description">单行显示正在上或下一节课</string>
+    <string name="widget_mini_empty">今天没有课</string>
+    <string name="widget_mini_current">正在上 %1$s</string>
+    <string name="widget_mini_time">%1$s %2$s</string>
+    <string name="widget_mini_day">%1$s %2$s %3$s</string>
+    <string name="widget_row">%1$s  %2$s</string>
+    <string name="widget_row_with_room">%1$s  %2$s · %3$s</string>
+    <string name="widget_more_courses">还有 %1$d 门</string>
     <string-array name="widget_weekdays">
         <item>周一</item>
         <item>周二</item>
@@ -238,7 +252,12 @@
     <string name="classroom_title">空闲教室</string>
     <string name="more_empty_classroom">查询空闲教室</string>
     <string name="classroom_slot">第%1$d-%2$d节</string>
-    <string name="classroom_summary">第%1$d周 %2$s %3$s · 共 %4$d 间空闲</string>
+    <string name="classroom_summary">%1$s · 共 %2$d 间空闲</string>
+    <string name="classroom_summary_filtered">%1$s · 筛选出 %2$d / %3$d 间</string>
+    <string name="classroom_context">第%1$d周 %2$s %3$s</string>
+    <string name="classroom_search_hint">搜索教室或楼栋，如 S、G、厚德楼</string>
+    <string name="classroom_building_all">全部楼栋</string>
+    <string name="classroom_empty_filtered">没有符合条件的教室</string>
     <string name="classroom_loading">正在查询空闲教室…</string>
     <string name="classroom_empty">该时段没有空闲教室</string>
     <string name="classroom_need_login">登录已失效，请重新登录后再查询</string>

@@ -3,6 +3,7 @@ package com.gzus.courseassistant
 import com.gzus.courseassistant.data.model.AppState
 import com.gzus.courseassistant.data.model.Course
 import com.gzus.courseassistant.data.model.Period
+import com.gzus.courseassistant.data.model.ScheduleLogic
 import com.gzus.courseassistant.data.model.ScheduleSnapshot
 import com.gzus.courseassistant.data.model.Term
 import com.gzus.courseassistant.widget.WidgetCoursePlanner
@@ -125,6 +126,47 @@ class WidgetCoursePlannerTest {
         assertEquals(WidgetKind.EMPTY, plan.kind)
         assertNull(plan.course)
         assertFalse(plan.scheduleAvailable)
+    }
+
+    @Test
+    fun listsWholeDayWithTiming() {
+        val plan = WidgetCoursePlanner.today(
+            state(
+                schedule(
+                    course("c1", "数据结构", weekday = 1, start = 1, end = 1),
+                    course("c2", "计算机网络", weekday = 1, start = 2, end = 2),
+                ),
+            ),
+            LocalDateTime.of(monday, LocalTime.of(9, 20)),
+        )
+
+        assertEquals(2, plan.items.size)
+        assertTrue(plan.scheduleAvailable)
+        assertEquals("数据结构", plan.items[0].course.name)
+        assertEquals(ScheduleLogic.TimingState.CURRENT, plan.items[0].timing)
+        assertEquals("计算机网络", plan.items[1].course.name)
+        assertEquals(ScheduleLogic.TimingState.UPCOMING, plan.items[1].timing)
+    }
+
+    @Test
+    fun todayIsEmptyOnWeekend() {
+        val saturday = LocalDate.of(2026, 10, 31)
+        val plan = WidgetCoursePlanner.today(
+            state(schedule(course("c1", "数据结构", weekday = 1, start = 1, end = 1))),
+            LocalDateTime.of(saturday, LocalTime.of(10, 0)),
+        )
+
+        assertTrue(plan.scheduleAvailable)
+        assertTrue(plan.items.isEmpty())
+        assertEquals(6, plan.weekday)
+    }
+
+    @Test
+    fun todayReportsMissingSchedule() {
+        val plan = WidgetCoursePlanner.today(AppState(), LocalDateTime.of(monday, LocalTime.of(9, 20)))
+
+        assertFalse(plan.scheduleAvailable)
+        assertTrue(plan.items.isEmpty())
     }
 
     private fun state(

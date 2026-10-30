@@ -20,7 +20,7 @@ v1.3.5 已装到真机并完成走查（空闲教室列表与验证码尺寸均�
 | 仓库根 | `G:\weixingkebiao` |
 | Android 工程 | `G:\weixingkebiao\android` |
 | 包名 / 应用 | `com.gzus.courseassistant`（课表轻助） |
-| 当前版本 | `versionCode 8`、`versionName "1.3.4"`（`android/app/build.gradle.kts`） |
+| 当前版本 | `versionCode 10`、`versionName "1.3.6"`（`android/app/build.gradle.kts`） |
 | JDK | 17（`JAVA_HOME=E:\java\jdk-17.0.2`，已是用户级环境变量） |
 | Android SDK | `C:\Users\255\AppData\Local\Android\Sdk`（`platforms\android-36`、`build-tools\36.0.0`、`platform-tools` 37.0.1）— 曾整个被删，已重新安装，**不要再删** |
 | adb | `C:\Users\255\AppData\Local\Android\Sdk\platform-tools\adb.exe` |
@@ -82,31 +82,31 @@ v1.3.5 已装到真机并完成走查（空闲教室列表与验证码尺寸均�
 - 学业页 ToggleGroup 扩为「成绩|分析|考试」；今日页新增考试倒计时卡；更多页新增考试提醒设置。
 - `AppSettings` 新增 `examReminderEnabled` / `examReminderLeadHours` / `examRemindedKeys`。
 
-### 2.2 M2：桌面小组件（v1.3.4，提交 `8358323`）
+### 2.2 M2：桌面小组件（v1.3.4 起步，后续扩成三档）
 
-新增：
+三档尺寸（都是 `RemoteViews`，不引 Glance）：
+
+| 小组件 | 尺寸 | Provider | 内容 |
+| --- | --- | --- | --- |
+| 今日课程 | 4×3（250×180dp） | `TodayCoursesWidgetProvider` | 当天最多 5 门，行格式 `08:00  课名 · 教室`，正在上的一行主色 + `▸`，超出显示「还有 N 门」 |
+| 下一节课 | 2×2（110×110dp） | `NextCourseWidgetProvider` | 标签 / 课名 / `17:00 · T105` |
+| 下一节课·迷你 | 3×1（180×40dp） | `MiniCourseWidgetProvider` | 单行 `17:00 大学日语IV` |
 
 - `widget/WidgetCoursePlanner.kt`：`WidgetKind{CURRENT,NEXT_TODAY,NEXT_UPCOMING,EMPTY}`、
-  `WidgetPlan(kind, course, period, start, end, dayOffset, scheduleAvailable)`；
-  `plan(state, now)` 依次判断「正在上 → 今天下一节 → 未来 7 天最近一节 → 空」。
-- `widget/NextCourseWidgetProvider.kt`：`AppWidgetProvider` + `RemoteViews`；
-  `refresh(context)` 供后台任务调用；点击 `PendingIntent` 带 `EXTRA_OPEN_TODAY` 打开今日页。
-  文案：标签（正在上课 / 下一节课 / 下一节课·明天）、课名、`17:00-18:20 · 广州校区 T105`。
-  地点拼接已处理「room 本身已含 campus」的重复问题。
-- `res/layout/widget_next_course.xml`（3 个 TextView）、`res/drawable/bg_widget.xml`
-  （圆角 18dp，用 `@color/surface`/`@color/line`，深色模式自动跟随 values-night）、
-  `res/xml/widget_next_course_info.xml`（180×110dp、`updatePeriodMillis=1800000`、resizeMode 双向）。
-- `AndroidManifest.xml` 注册 receiver（`exported="false"`）+ 声明
+  `WidgetPlan(...)`、`plan(state, now)`；另有 `today(state, now): TodayPlan` 给大号用。
+- `widget/WidgetViews.kt`：三个布局共用的渲染 + `refreshAll(context)`；
+  `buildToday(context, plan = todayPlan(context))` 可注入 plan，便于预览/测试。
+- 教室号会去掉「广州校区」前缀（`compactRoom`），窄卡片才放得下。
+- `res/layout/widget_{today_courses,next_course,mini_course}.xml`、
+  `res/drawable/bg_widget.xml`（圆角 18dp，跟随 values-night）、
+  对应的 `res/xml/*_info.xml`（`updatePeriodMillis=1800000`）。
+- `AndroidManifest.xml` 注册三个 receiver（`exported="false"`）+ 声明
   `com.miui.home.launcher.permission.INSTALL_WIDGET`（MIUI 用，非 MIUI 设备忽略）。
-- `WidgetCoursePlannerTest.kt`（7 个用例）。
 
-修改：
-
-- 刷新时机：`CourseReminderWorker`（每 15 分钟，`try/finally` 保证早退也刷新）、
-  `SyncWorker`（同步后）、`MainActivity.onResume` 与 `maybeRefresh` 成功后、`TodayFragment` 手动同步后。
-- `MoreFragment` + `fragment_more.xml`：新增「添加桌面小组件」按钮，调
-  `AppWidgetManager.requestPinAppWidget`，无论成功与否都提示「若桌面未弹出确认，请长按桌面空白处手动添加」。
-- `strings.xml` 新增 `widget_*`、`more_add_widget`、`widget_pin_*`（含 `widget_weekdays` 数组）。
+刷新时机：`CourseReminderWorker`（每 15 分钟，`try/finally` 保证早退也刷新）、
+`SyncWorker`（同步后）、`MainActivity.onResume` 与 `maybeRefresh` 成功后、
+`TodayFragment` 手动同步后，统一调 `WidgetViews.refreshAll`。
+`MoreFragment` 的「添加桌面小组件」会先弹三选一（今日课程 / 下一节课 / 迷你）再请求固定。
 
 ### 2.3 M3：空闲教室（v1.3.5）
 
@@ -138,8 +138,12 @@ form: xnm=2026  xqm=3  xqh_id=<校区id，空=全部>
 - `ui/classroom/EmptyClassroomActivity.kt` + `ClassroomAdapter.kt` +
   `res/layout/activity_empty_classroom.xml` + `item_classroom.xml`：
   顶部「星期」「节次」两个 Spinner（默认定位到今天 / 当前节次），自动查询；
+  第二行是**搜索框 + 楼栋下拉**（都只过滤已拉取的列表，不再请求教务）；
   列表行显示 教室号 + 座位数 + 场地名称 + 校区·教学楼·类别；
   空态「该时段没有空闲教室」，会话失效时提示重新登录。
+- 校区 id 会随同步写入 `AppSettings.campusId`，冷启动时 `AppRepository.init`
+  用 `client.rememberCampus(...)` 恢复，避免把另一个校区也查进来
+  （实测未恢复时 449 间 = 广州 255 + 江门 194）。
 - `MoreFragment` + `fragment_more.xml`：校历下方新增「查询空闲教室」入口。
 - `ClassroomParsingTest.kt`（4 个用例）。
 - `qa/probe_empty_classroom.py`：取证脚本，支持 `--wait <秒>` 等待有效会话后自动抓包。
@@ -160,14 +164,15 @@ form: xnm=2026  xqm=3  xqh_id=<校区id，空=全部>
 
 | 检查 | 结果 |
 | --- | --- |
-| `./gradlew.bat testDebugUnitTest` | ✅ **70 个用例全过**（GradeStats 8 + ExamSchedule 10 + ExamReminderPlanner 7 + WidgetCoursePlanner 7 + ClassroomParsing 4 + 原有 34） |
+| `./gradlew.bat testDebugUnitTest` | ✅ **73 个用例全过**（GradeStats 8 + ExamSchedule 10 + ExamReminderPlanner 7 + WidgetCoursePlanner 10 + ClassroomParsing 4 + 原有 34） |
 | `./gradlew.bat lintDebug` | ✅ BUILD SUCCESSFUL（`abortOnError=true`，零 error） |
 | `./gradlew.bat assembleRelease` | ✅ `app-release.apk` 2.1 MB，release 签名（v1.3.5 / versionCode 9） |
 | 真机安装 | ✅ `adb install -r` 保留数据，已升级 v1.3.5（versionCode 9） |
 | 空闲教室真机走查 | ✅ 「更多 → 查询空闲教室」默认定位周五/第9-10节，显示 255 间；切周一 174 间；切第1-2节 **194 间**，与 Python 抓包结果完全一致（校区、周次、节次位掩码都对） |
+| 空闲教室筛选 | ✅ 搜索 `S` → 80/255 间；楼栋选「笃行楼S」→ 18/255 间，行内楼栋与教室号一致 |
+| 小组件渲染 | ✅ 临时预览页实机渲染三档：今日课程 `今日课程 · 周五 · 7 门` + 5 行 + 「还有 2 门」、下一节课 3 行、迷你单行，均无截断 |
 | 验证码尺寸 | ✅ 登录页有 `FLAG_SECURE` 不能截图，改用 `uiautomator dump` 量控件：`captchaCard` 440×110 px = 160dp×40dp（4:1），`captchaImage` 与卡片同 bounds（完全铺满） |
 | M1 两处修复复验 | ✅ 趋势图首尾标签 `2.20 / 24-25-2`、`2.82 / 25-26-2` 完整；考试提醒弹窗单选列表正常 |
-| 小组件渲染 | ✅ 临时预览页实机渲染：`下一节课 / 大学日语IV / 17:00-18:20 · 广州校区 T105` |
 | 小组件上桌面 | ⚠️ **未能完成**：MIUI 面板要联网（恒「网络异常」），`requestPinAppWidget` 被 MIUI 拒绝（见坑 8）。需在原生桌面或换桌面启动器再验 |
 | 考试倒计时/提醒 | ⚠️ 仍需真实考试数据；本机教务会话已过期（更多页「未登录」），要用户重新登录后同步 |
 
@@ -178,7 +183,7 @@ form: xnm=2026  xqm=3  xqh_id=<校区id，空=全部>
 
 ### 1. 发布（用户手动）
 
-- 打 `v1.3.5` tag 并上传 `app-release.apk` 到 GitHub Releases（README 里有流程）。
+- 打 `v1.3.6` tag 并上传 `app-release.apk` 到 GitHub Releases（README 里有流程）。
 - 代码侧已完成并走查通过，不需要再改代码。
 
 ### 2. 可选后续

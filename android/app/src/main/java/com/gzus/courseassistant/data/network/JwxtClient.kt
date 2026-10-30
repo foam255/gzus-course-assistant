@@ -245,6 +245,11 @@ class JwxtClient(
     var lastCampusId: String = ""
         private set
 
+    /** 冷启动时从本地设置恢复校区，避免空闲教室把另一个校区也查出来。 */
+    fun rememberCampus(id: String) {
+        if (id.isNotBlank()) lastCampusId = id
+    }
+
     fun fetchEmptyClassrooms(
         term: Term,
         week: Int,

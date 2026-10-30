@@ -28,6 +28,7 @@
             android:exported="false"
             android:label="@string/classroom_title" />
 
+
         <activity
             android:name=".ui.login.LoginActivity"
             android:exported="false"
@@ -54,6 +55,18 @@
         </provider>
 
         <receiver
+            android:name=".widget.TodayCoursesWidgetProvider"
+            android:exported="false"
+            android:label="@string/widget_today_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_today_courses_info" />
+        </receiver>
+
+        <receiver
             android:name=".widget.NextCourseWidgetProvider"
             android:exported="false"
             android:label="@string/widget_name">
@@ -63,6 +76,18 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_next_course_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.MiniCourseWidgetProvider"
+            android:exported="false"
+            android:label="@string/widget_mini_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_mini_course_info" />
         </receiver>
     </application>
 

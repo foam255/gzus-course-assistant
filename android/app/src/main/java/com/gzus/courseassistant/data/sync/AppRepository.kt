@@ -42,6 +42,10 @@ class AppRepository(
     )
     val state: StateFlow<AppState> = _state.asStateFlow()
 
+    init {
+        client.rememberCampus(settings.campusId)
+    }
+
     val hasSession: Boolean
         get() = !cookieJar.isEmpty()
 
@@ -76,6 +80,7 @@ class AppRepository(
 
                 val schedule = client.fetchSchedule(termLabel)
                 scheduleUpdated = true
+                settings.campusId = client.lastCampusId
                 saveSchedule(
                     schedule = schedule,
                     availableTerms = client.lastAvailableTerms,

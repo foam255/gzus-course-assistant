@@ -34,6 +34,22 @@ data class WidgetPlan(
     val scheduleAvailable: Boolean = true,
 )
 
+/** 今日课程列表里的一门课。 */
+data class TodayItem(
+    val course: Course,
+    val period: Period,
+    val start: LocalTime?,
+    val end: LocalTime?,
+    val timing: ScheduleLogic.TimingState,
+)
+
+/** 「今日课程」小组件要展示的整日内容。 */
+data class TodayPlan(
+    val weekday: Int,
+    val items: List<TodayItem>,
+    val scheduleAvailable: Boolean,
+)
+
 /**
  * 小组件内容推算，纯逻辑，可 JVM 单测。
  */
@@ -67,6 +83,31 @@ object WidgetCoursePlanner {
         }
 
         return WidgetPlan(WidgetKind.EMPTY)
+    }
+
+    /**
+     * 今日课程整日列表，供大号小组件使用。
+     */
+    fun today(
+        state: AppState,
+        now: LocalDateTime = LocalDateTime.now(),
+    ): TodayPlan {
+        val weekday = now.dayOfWeek.value
+        val schedule = state.activeSchedule
+            ?: return TodayPlan(weekday, emptyList(), scheduleAvailable = false)
+        val firstWeekStart = state.firstWeekStarts[schedule.term.label]
+        val time = now.toLocalTime()
+        val items = ScheduleLogic.occurrences(schedule, now.toLocalDate(), firstWeekStart)
+            .map { occurrence ->
+                TodayItem(
+                    course = occurrence.course,
+                    period = occurrence.period,
+                    start = occurrence.start,
+                    end = occurrence.end,
+                    timing = ScheduleLogic.timingState(occurrence, time),
+                )
+            }
+        return TodayPlan(weekday, items, scheduleAvailable = true)
     }
 
     private fun ScheduleLogic.Occurrence.toPlan(

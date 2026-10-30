@@ -5,7 +5,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.gzus.courseassistant.CourseApplication
 import com.gzus.courseassistant.data.model.ScheduleLogic
-import com.gzus.courseassistant.widget.NextCourseWidgetProvider
+import com.gzus.courseassistant.widget.WidgetViews
 import java.time.LocalDate
 import java.time.LocalTime
 
@@ -16,7 +16,7 @@ class CourseReminderWorker(
     override suspend fun doWork(): Result = try {
         remind()
     } finally {
-        NextCourseWidgetProvider.refresh(applicationContext)
+        WidgetViews.refreshAll(applicationContext)
     }
 
     private fun remind(): Result {

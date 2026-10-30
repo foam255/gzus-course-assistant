@@ -92,6 +92,30 @@
             app:iconTint="@color/ink" />
 
         <com.google.android.material.button.MaterialButton
+            android:id="@+id/examReminderButton"
+            style="@style/Widget.CourseAssistant.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="start|center_vertical"
+            android:text="@string/exam_reminder"
+            app:icon="@drawable/ic_school"
+            app:iconGravity="textStart"
+            app:iconTint="@color/ink" />
+
+        <TextView
+            android:id="@+id/examReminderHint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginStart="14dp"
+            android:layout_marginEnd="14dp"
+            android:text="@string/exam_reminder_hint"
+            android:textAppearance="@style/TextAppearance.CourseAssistant.Body"
+            android:textColor="@color/muted"
+            android:textSize="12sp" />
+
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/syncButton"
             style="@style/Widget.CourseAssistant.OutlinedButton"
             android:layout_width="match_parent"

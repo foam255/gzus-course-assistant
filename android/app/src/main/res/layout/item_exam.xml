@@ -31,6 +31,16 @@
             android:paddingBottom="3dp"
             android:textColor="@color/primary"
             android:textSize="11sp" />
+
+        <TextView
+            android:id="@+id/examDaysLeft"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:textColor="@color/accent"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
     </LinearLayout>
 
     <TextView

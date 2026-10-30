@@ -7,6 +7,7 @@ import com.gzus.courseassistant.data.network.JwxtClient
 import com.gzus.courseassistant.data.network.StoredCookieJar
 import com.gzus.courseassistant.data.sync.AppRepository
 import com.gzus.courseassistant.notifications.CourseReminderWorker
+import com.gzus.courseassistant.notifications.ExamReminderWorker
 import com.gzus.courseassistant.notifications.NotificationHelper
 import com.gzus.courseassistant.data.sync.SyncWorker
 import com.gzus.courseassistant.data.update.UpdateChecker
@@ -75,12 +76,23 @@ class CourseApplication : Application() {
             ExistingPeriodicWorkPolicy.UPDATE,
             updateRequest,
         )
+
+        val examReminderRequest = PeriodicWorkRequestBuilder<ExamReminderWorker>(
+            1,
+            TimeUnit.HOURS,
+        ).build()
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            EXAM_WORK,
+            ExistingPeriodicWorkPolicy.UPDATE,
+            examReminderRequest,
+        )
     }
 
     private companion object {
         const val SYNC_WORK = "daily-course-sync"
         const val REMINDER_WORK = "course-reminders"
         const val UPDATE_WORK = "daily-update-check"
+        const val EXAM_WORK = "exam-reminders"
     }
 }
 

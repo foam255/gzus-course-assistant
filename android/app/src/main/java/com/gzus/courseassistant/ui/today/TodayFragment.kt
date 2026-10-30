@@ -13,14 +13,17 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.gzus.courseassistant.R
 import com.gzus.courseassistant.CourseApplication
 import com.gzus.courseassistant.data.model.AppState
+import com.gzus.courseassistant.data.model.ExamSchedule
 import com.gzus.courseassistant.data.model.ScheduleLogic
 import com.gzus.courseassistant.data.model.ScheduleSnapshot
+import com.gzus.courseassistant.data.model.Upcoming
 import com.gzus.courseassistant.databinding.FragmentTodayBinding
 import com.gzus.courseassistant.ui.main.MainActivity
 import com.gzus.courseassistant.ui.timetable.CourseDetailDialog
 import com.gzus.courseassistant.util.UiUtils
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
@@ -53,6 +56,9 @@ class TodayFragment : Fragment() {
         viewBinding.todayDate.text = UiUtils.todayLabel()
         viewBinding.syncButton.setOnClickListener { sync() }
         viewBinding.swipeRefresh.setOnRefreshListener { sync() }
+        viewBinding.examCountdownCard.setOnClickListener {
+            (activity as? MainActivity)?.openAcademics()
+        }
 
         val repository = (requireActivity().application as CourseApplication).container.repository
         viewLifecycleOwner.lifecycleScope.launch {
@@ -83,6 +89,7 @@ class TodayFragment : Fragment() {
             viewBinding.todayTitle.setText(R.string.today_title)
             viewBinding.todayDate.text = UiUtils.dateLabel(selectedDate)
             viewBinding.weekPreviewSection.visibility = View.GONE
+            viewBinding.examCountdownCard.visibility = View.GONE
             weekPreviewAdapter.submit(emptyList())
             selectedDate = LocalDate.now()
             return
@@ -144,6 +151,7 @@ class TodayFragment : Fragment() {
             isToday,
         )
         renderWeekPreview(snapshot, today, selected, firstWeekStart)
+        renderExamCountdown(state)
 
         val lastSync = getString(
             R.string.last_sync,
@@ -214,6 +222,45 @@ class TodayFragment : Fragment() {
             parts.joinToString(" · ")
         }
         viewBinding.todayState.visibility = View.VISIBLE
+    }
+
+    private fun renderExamCountdown(state: AppState) {
+        val viewBinding = binding ?: return
+        val next = ExamSchedule.next(state.exams, LocalDateTime.now())
+        if (next == null) {
+            viewBinding.examCountdownCard.visibility = View.GONE
+            return
+        }
+        val exam = next.exam
+        viewBinding.examCountdownText.text = countdownLabel(next)
+        val whenText = listOf(exam.date, exam.time)
+            .filter { it.isNotBlank() }
+            .joinToString(" ")
+        val placeText = listOf(exam.room, exam.seat)
+            .filter { it.isNotBlank() }
+            .joinToString(" · ")
+        viewBinding.examCountdownDetail.text = if (placeText.isBlank()) {
+            whenText
+        } else {
+            getString(R.string.exam_countdown_detail, whenText, placeText)
+        }
+        viewBinding.examCountdownCard.visibility = View.VISIBLE
+    }
+
+    private fun countdownLabel(upcoming: Upcoming): String {
+        val daysLeft = upcoming.daysLeft ?: return getString(R.string.exam_countdown_soon)
+        return when {
+            daysLeft > 0L -> getString(R.string.exam_countdown_days, daysLeft)
+            upcoming.hasTime -> {
+                val minutes = upcoming.minutesLeft ?: 0L
+                if (minutes <= 60L) {
+                    getString(R.string.exam_countdown_soon)
+                } else {
+                    getString(R.string.exam_countdown_hours, (minutes / 60L).toInt())
+                }
+            }
+            else -> getString(R.string.exam_countdown_today, upcoming.exam.courseName)
+        }
     }
 
     private fun renderWeekPreview(

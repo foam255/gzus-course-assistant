@@ -6,6 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.LinearLayout
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -14,18 +16,29 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.gzus.courseassistant.CourseApplication
 import com.gzus.courseassistant.R
 import com.gzus.courseassistant.data.model.AppState
+import com.gzus.courseassistant.data.model.ExamSchedule
 import com.gzus.courseassistant.data.model.Grade
+import com.gzus.courseassistant.data.model.GradeDistribution
+import com.gzus.courseassistant.data.model.GradeStatsCalculator
 import com.gzus.courseassistant.data.model.Term
+import com.gzus.courseassistant.data.model.TermStat
+import com.gzus.courseassistant.data.model.TypeStat
+import com.gzus.courseassistant.data.model.Upcoming
 import com.gzus.courseassistant.databinding.FragmentAcademicsBinding
+import com.gzus.courseassistant.databinding.ViewStatBarRowBinding
+import com.gzus.courseassistant.databinding.ViewStatTextRowBinding
 import com.gzus.courseassistant.ui.main.MainActivity
 import com.gzus.courseassistant.util.UiUtils
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
 
 class AcademicsFragment : Fragment() {
     private var binding: FragmentAcademicsBinding? = null
     private val gradeAdapter = GradeAdapter()
-    private val examAdapter = ExamAdapter()
-    private var showingGrades = true
+    private val examAdapter = ExamAdapter { upcoming ->
+        ExamDetailDialog.show(requireContext(), upcoming.exam)
+    }
+    private var mode = MODE_GRADES
     private var terms: List<Term> = emptyList()
     private var selectedTerm: Term? = null
     private var syncing = false
@@ -48,7 +61,11 @@ class AcademicsFragment : Fragment() {
         viewBinding.academicList.adapter = gradeAdapter
         viewBinding.tabGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (!isChecked) return@addOnButtonCheckedListener
-            showingGrades = checkedId == R.id.gradesTab
+            mode = when (checkedId) {
+                R.id.gradesTab -> MODE_GRADES
+                R.id.analysisTab -> MODE_ANALYSIS
+                else -> MODE_EXAMS
+            }
             render(repository().state.value)
         }
         viewBinding.termSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
@@ -113,21 +130,34 @@ class AcademicsFragment : Fragment() {
 
         val grades = state.grades.filter { it.term == term }
         val exams = state.exams.filter { it.term == term }
-        if (showingGrades) {
-            viewBinding.academicList.adapter = gradeAdapter
-            gradeAdapter.submit(grades)
-            viewBinding.emptyText.setText(R.string.no_grades)
-            viewBinding.emptyText.visibility = if (grades.isEmpty()) View.VISIBLE else View.GONE
-            renderGradeSummary(grades)
-        } else {
-            viewBinding.academicList.adapter = examAdapter
-            examAdapter.submit(exams)
-            viewBinding.emptyText.setText(R.string.no_exams)
-            viewBinding.emptyText.visibility = if (exams.isEmpty()) View.VISIBLE else View.GONE
-            viewBinding.summaryLeft.text = "考试 ${exams.size} 场"
-            viewBinding.summaryRight.text = exams.firstOrNull()?.let {
-                listOf(it.date, it.time).filter(String::isNotBlank).joinToString(" ")
-            }.orEmpty()
+        val isAnalysis = mode == MODE_ANALYSIS
+        viewBinding.termSpinner.visibility = if (isAnalysis) View.GONE else View.VISIBLE
+        viewBinding.summaryRow.visibility = if (isAnalysis) View.GONE else View.VISIBLE
+        viewBinding.analysisScroll.visibility = if (isAnalysis) View.VISIBLE else View.GONE
+        viewBinding.academicList.visibility = if (isAnalysis) View.GONE else View.VISIBLE
+
+        when (mode) {
+            MODE_GRADES -> {
+                viewBinding.emptyText.setText(R.string.no_grades)
+                viewBinding.emptyText.visibility = if (grades.isEmpty()) View.VISIBLE else View.GONE
+                viewBinding.academicList.adapter = gradeAdapter
+                gradeAdapter.submit(grades)
+                renderGradeSummary(grades)
+            }
+
+            MODE_ANALYSIS -> {
+                viewBinding.emptyText.visibility = View.GONE
+                renderAnalysis(state.grades)
+            }
+
+            else -> {
+                viewBinding.emptyText.setText(R.string.no_exams)
+                viewBinding.emptyText.visibility = if (exams.isEmpty()) View.VISIBLE else View.GONE
+                viewBinding.academicList.adapter = examAdapter
+                val upcoming = ExamSchedule.upcoming(exams, LocalDateTime.now())
+                examAdapter.submit(upcoming)
+                renderExamSummary(upcoming)
+            }
         }
         val syncLabel = getString(
             R.string.last_sync,
@@ -167,6 +197,120 @@ class AcademicsFragment : Fragment() {
         }
     }
 
+    private fun renderExamSummary(upcoming: List<Upcoming>) {
+        val binding = binding ?: return
+        binding.summaryLeft.text = "考试 ${upcoming.size} 场"
+        val next = upcoming.firstOrNull()
+        binding.summaryRight.text = next?.let { countdownLabel(it) }.orEmpty()
+    }
+
+    private fun countdownLabel(upcoming: Upcoming): String {
+        val exam = upcoming.exam
+        val daysLeft = upcoming.daysLeft ?: return listOf(exam.date, exam.time)
+            .filter(String::isNotBlank)
+            .joinToString(" ")
+        return when {
+            daysLeft > 0 -> getString(R.string.exam_days_left, daysLeft)
+            upcoming.hasTime -> {
+                val minutes = upcoming.minutesLeft ?: 0L
+                val hours = minutes / 60L
+                if (hours <= 0L) {
+                    getString(R.string.exam_countdown_soon)
+                } else {
+                    getString(R.string.exam_hours_left, hours)
+                }
+            }
+            else -> getString(R.string.exam_days_left_today)
+        }
+    }
+
+    private fun renderAnalysis(grades: List<Grade>) {
+        val binding = binding ?: return
+        val stats = GradeStatsCalculator.compute(grades)
+        val hasData = stats.hasData
+        binding.analysisContent.visibility = if (hasData) View.VISIBLE else View.GONE
+        binding.analysisEmpty.visibility = if (hasData) View.GONE else View.VISIBLE
+        if (!hasData) {
+            binding.trendChart.setData(emptyList())
+            return
+        }
+        binding.analysisGpaValue.text = stats.cumulativeGpa
+            ?.let { "%.2f".format(it) }
+            ?: getString(R.string.analysis_gpa_unavailable)
+        binding.analysisScoreValue.text = stats.weightedScore
+            ?.let { "%.1f".format(it) }
+            ?: getString(R.string.analysis_score_unavailable)
+        binding.analysisCreditsValue.text = "%.1f".format(stats.totalCredits)
+        binding.analysisCountValue.text = stats.totalCourses.toString()
+        binding.analysisFailedValue.text = stats.failedCourses.toString()
+        binding.analysisFailedValue.setTextColor(
+            ContextCompat.getColor(
+                requireContext(),
+                if (stats.failedCourses > 0) R.color.danger else R.color.ink,
+            ),
+        )
+        binding.trendChart.setData(stats.terms)
+        renderDistribution(binding.distributionContainer, stats.distribution)
+        renderTypeStats(binding.typeContainer, stats.byType)
+        renderTermStats(binding.termContainer, stats.terms)
+    }
+
+    private fun renderDistribution(container: LinearLayout, distribution: GradeDistribution) {
+        container.removeAllViews()
+        val total = distribution.total
+        val rows = listOf(
+            R.string.analysis_distribution_excellent to distribution.excellent,
+            R.string.analysis_distribution_good to distribution.good,
+            R.string.analysis_distribution_medium to distribution.medium,
+            R.string.analysis_distribution_pass to distribution.pass,
+            R.string.analysis_distribution_fail to distribution.fail,
+            R.string.analysis_distribution_unknown to distribution.unknown,
+        )
+        rows.forEach { (labelRes, count) ->
+            val row = ViewStatBarRowBinding.inflate(layoutInflater, container, false)
+            row.rowLabel.setText(labelRes)
+            row.rowValue.text = getString(R.string.analysis_count_format, count)
+            row.rowBar.progress = if (total > 0) count * 100 / total else 0
+            container.addView(row.root)
+        }
+    }
+
+    private fun renderTypeStats(container: LinearLayout, stats: List<TypeStat>) {
+        container.removeAllViews()
+        stats.forEach { stat ->
+            val row = ViewStatTextRowBinding.inflate(layoutInflater, container, false)
+            row.rowLabel.text = stat.courseType.ifBlank { getString(R.string.analysis_type_unknown) }
+            row.rowValue.text = summaryText(stat.courseCount, stat.credits, stat.gpa)
+            container.addView(row.root)
+        }
+    }
+
+    private fun renderTermStats(container: LinearLayout, stats: List<TermStat>) {
+        container.removeAllViews()
+        stats.forEach { stat ->
+            val row = ViewStatTextRowBinding.inflate(layoutInflater, container, false)
+            row.rowLabel.text = getString(
+                R.string.analysis_term_label,
+                stat.term.year,
+                stat.term.year + 1,
+                stat.term.number,
+            )
+            row.rowValue.text = summaryText(stat.courseCount, stat.credits, stat.gpa)
+            container.addView(row.root)
+        }
+    }
+
+    private fun summaryText(courseCount: Int, credits: Double, gpa: Double?): String {
+        val parts = mutableListOf(getString(R.string.analysis_count_format, courseCount))
+        if (credits > 0) {
+            parts += getString(R.string.analysis_credits_format, "%.1f".format(credits))
+        }
+        if (gpa != null) {
+            parts += getString(R.string.analysis_gpa_format, "%.2f".format(gpa))
+        }
+        return parts.joinToString(" · ")
+    }
+
     private fun sync() {
         if (syncing) return
         val term = selectedTerm ?: return
@@ -189,4 +333,10 @@ class AcademicsFragment : Fragment() {
 
     private fun repository() =
         (requireActivity().application as CourseApplication).container.repository
+
+    private companion object {
+        const val MODE_GRADES = 0
+        const val MODE_ANALYSIS = 1
+        const val MODE_EXAMS = 2
+    }
 }

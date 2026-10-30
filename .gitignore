@@ -9,5 +9,8 @@ data/*.json
 data/*.json.tmp
 qa/
 
+.gradle-test.log
+android/.kotlin/
+
 .DS_Store
 Thumbs.db

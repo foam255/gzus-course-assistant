@@ -61,6 +61,9 @@ class MainActivity : AppCompatActivity() {
         if (intent.getBooleanExtra(EXTRA_OPEN_MORE, false)) {
             binding.bottomNavigation.selectedItemId = R.id.nav_more
         }
+        if (intent.getBooleanExtra(EXTRA_OPEN_ACADEMICS, false)) {
+            binding.bottomNavigation.selectedItemId = R.id.nav_academics
+        }
         if (!repository.hasSession && repository.state.value.currentSchedule == null) {
             showLogin()
             return
@@ -80,6 +83,10 @@ class MainActivity : AppCompatActivity() {
 
     fun showMessage(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+    }
+
+    fun openAcademics() {
+        binding.bottomNavigation.selectedItemId = R.id.nav_academics
     }
 
     fun handleSyncError(error: Throwable) {
@@ -151,11 +158,15 @@ class MainActivity : AppCompatActivity() {
         if (intent.getBooleanExtra(EXTRA_OPEN_MORE, false)) {
             binding.bottomNavigation.selectedItemId = R.id.nav_more
         }
+        if (intent.getBooleanExtra(EXTRA_OPEN_ACADEMICS, false)) {
+            binding.bottomNavigation.selectedItemId = R.id.nav_academics
+        }
     }
 
     companion object {
         const val EXTRA_OPEN_TODAY = "open_today"
         const val EXTRA_OPEN_MORE = "open_more"
+        const val EXTRA_OPEN_ACADEMICS = "open_academics"
         const val EXTRA_LOGIN_MESSAGE = "login_message"
     }
 }

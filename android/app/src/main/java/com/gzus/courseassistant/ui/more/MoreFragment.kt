@@ -53,6 +53,7 @@ class MoreFragment : Fragment() {
             startActivity(Intent(requireContext(), CalendarActivity::class.java))
         }
         viewBinding.reminderButton.setOnClickListener { showReminderDialog() }
+        viewBinding.examReminderButton.setOnClickListener { showExamReminderDialog() }
         viewBinding.syncButton.setOnClickListener { syncAll() }
         viewBinding.firstWeekButton.setOnClickListener { showFirstWeekDatePicker() }
         viewBinding.checkUpdateButton.setOnClickListener { checkForUpdates() }
@@ -129,6 +130,10 @@ class MoreFragment : Fragment() {
             ),
         )
         viewBinding.syncButton.isEnabled = !syncing
+        viewBinding.examReminderButton.text = getString(
+            R.string.more_exam_reminder_status,
+            examReminderStatusLabel(),
+        )
         updateUpdateButton()
     }
 
@@ -329,6 +334,59 @@ class MoreFragment : Fragment() {
                 settings.remindedKeys = emptySet()
             }
             .show()
+    }
+
+    private fun showExamReminderDialog() {
+        val labels = arrayOf(
+            getString(R.string.exam_reminder_status_off),
+            getString(R.string.exam_reminder_lead_24),
+            getString(R.string.exam_reminder_lead_3),
+            getString(R.string.exam_reminder_lead_both),
+        )
+        val settings = requireApp().container.settings
+        val selected = examReminderChoice(settings.examReminderEnabled, settings.examReminderLeadHours)
+        var choice = selected
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.exam_reminder)
+            .setSingleChoiceItems(labels, selected) { _, which -> choice = which }
+            .setNegativeButton(R.string.cancel, null)
+            .setPositiveButton(R.string.confirm) { _, _ ->
+                when (choice) {
+                    0 -> settings.examReminderEnabled = false
+                    1 -> {
+                        settings.examReminderEnabled = true
+                        settings.examReminderLeadHours = setOf(24)
+                    }
+                    2 -> {
+                        settings.examReminderEnabled = true
+                        settings.examReminderLeadHours = setOf(3)
+                    }
+                    else -> {
+                        settings.examReminderEnabled = true
+                        settings.examReminderLeadHours = setOf(24, 3)
+                    }
+                }
+                settings.examRemindedKeys = emptySet()
+                render(repository().state.value)
+            }
+            .show()
+    }
+
+    private fun examReminderStatusLabel(): String {
+        val settings = requireApp().container.settings
+        return when (examReminderChoice(settings.examReminderEnabled, settings.examReminderLeadHours)) {
+            0 -> getString(R.string.exam_reminder_status_off)
+            1 -> getString(R.string.exam_reminder_lead_24)
+            2 -> getString(R.string.exam_reminder_lead_3)
+            else -> getString(R.string.exam_reminder_lead_both)
+        }
+    }
+
+    private fun examReminderChoice(enabled: Boolean, leads: Set<Int>): Int = when {
+        !enabled -> 0
+        leads.contains(24) && leads.contains(3) -> 3
+        leads.contains(24) -> 1
+        else -> 2
     }
 
     private fun syncAll() {

@@ -14,6 +14,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.gzus.courseassistant.R
 import com.gzus.courseassistant.data.model.Course
+import com.gzus.courseassistant.data.model.Exam
 import com.gzus.courseassistant.data.model.Period
 import com.gzus.courseassistant.data.model.ScheduleSnapshot
 import com.gzus.courseassistant.data.model.ScheduleLogic
@@ -23,6 +24,7 @@ import java.time.LocalTime
 
 object NotificationHelper {
     private const val COURSE_CHANNEL = "course_reminders"
+    private const val EXAM_CHANNEL = "exam_reminders"
     private const val UPDATE_CHANNEL = "app_updates"
 
     fun createChannels(context: Context) {
@@ -31,6 +33,13 @@ object NotificationHelper {
             NotificationChannel(
                 COURSE_CHANNEL,
                 context.getString(R.string.notification_channel),
+                NotificationManager.IMPORTANCE_DEFAULT,
+            ),
+        )
+        manager.createNotificationChannel(
+            NotificationChannel(
+                EXAM_CHANNEL,
+                context.getString(R.string.exam_notification_channel),
                 NotificationManager.IMPORTANCE_DEFAULT,
             ),
         )
@@ -84,6 +93,50 @@ object NotificationHelper {
         NotificationManagerCompat.from(context).notify(course.id.hashCode(), notification)
     }
 
+    /**
+     * 考试提醒。[leadLabel] 形如「1 天」「3 小时」；[onExamDay] 为 true 时表示
+     * 考试当天（时间未公布的考试只能按天提醒），标题改用「今天考试」。
+     */
+    @SuppressLint("MissingPermission")
+    fun notifyExam(
+        context: Context,
+        exam: Exam,
+        leadLabel: String,
+        onExamDay: Boolean,
+    ) {
+        if (!canPostNotifications(context)) return
+        val requestCode = examRequestCode(exam)
+        val intent = Intent(context, MainActivity::class.java)
+            .putExtra(MainActivity.EXTRA_OPEN_ACADEMICS, true)
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            requestCode,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+        val whenText = listOf(exam.date, exam.time)
+            .filter { it.isNotBlank() }
+            .joinToString(" ")
+        val placeText = listOf(exam.room, exam.seat)
+            .filter { it.isNotBlank() }
+            .joinToString(" · ")
+        val content = if (placeText.isBlank()) whenText else "$whenText · $placeText"
+        val title = if (onExamDay) {
+            context.getString(R.string.exam_notification_title_today, exam.courseName)
+        } else {
+            context.getString(R.string.exam_notification_title, exam.courseName, leadLabel)
+        }
+        val notification = NotificationCompat.Builder(context, EXAM_CHANNEL)
+            .setSmallIcon(R.drawable.ic_calendar)
+            .setContentTitle(title)
+            .setContentText(content)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(content))
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+            .build()
+        NotificationManagerCompat.from(context).notify(requestCode, notification)
+    }
+
     @SuppressLint("MissingPermission")
     fun notifyUpdate(context: Context, versionName: String) {
         if (!canPostNotifications(context)) return
@@ -95,19 +148,16 @@ object NotificationHelper {
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
+        val content = context.getString(R.string.update_notification_message)
         val notification = NotificationCompat.Builder(context, UPDATE_CHANNEL)
             .setSmallIcon(R.drawable.ic_download)
-            .setContentTitle(
-                context.getString(R.string.update_notification_title, versionName),
-            )
-            .setContentText(context.getString(R.string.update_notification_message))
+            .setContentTitle(context.getString(R.string.update_notification_title, versionName))
+            .setContentText(content)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(content))
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
             .build()
-        NotificationManagerCompat.from(context).notify(
-            UPDATE_NOTIFICATION_ID,
-            notification,
-        )
+        NotificationManagerCompat.from(context).notify(UPDATE_NOTIFICATION_ID, notification)
     }
 
     fun canPostNotifications(context: Context): Boolean =
@@ -144,5 +194,11 @@ object NotificationHelper {
         firstWeekStart = firstWeekStart,
     ).firstOrNull()
 
+    private fun examRequestCode(exam: Exam): Int {
+        val hash = (exam.courseName + exam.date + exam.time).hashCode() and 0x00FFFFFF
+        return hash or EXAM_ID_MASK
+    }
+
     private const val UPDATE_NOTIFICATION_ID = 21001
+    private const val EXAM_ID_MASK = 0x22001
 }

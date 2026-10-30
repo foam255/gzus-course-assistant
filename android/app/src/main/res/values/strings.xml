@@ -238,7 +238,6 @@
     <string name="classroom_title">空闲教室</string>
     <string name="more_empty_classroom">查询空闲教室</string>
     <string name="classroom_slot">第%1$d-%2$d节</string>
-    <string name="classroom_slot_with_time">第%1$d-%2$d节 %3$s-%4$s</string>
     <string name="classroom_summary">第%1$d周 %2$s %3$s · 共 %4$d 间空闲</string>
     <string name="classroom_loading">正在查询空闲教室…</string>
     <string name="classroom_empty">该时段没有空闲教室</string>

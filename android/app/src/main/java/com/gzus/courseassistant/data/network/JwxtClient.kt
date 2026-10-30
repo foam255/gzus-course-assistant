@@ -350,7 +350,9 @@ class JwxtClient(
 
     private fun postJsonObject(url: HttpUrl, body: FormBody): JSONObject {
         val response = postRaw(url, body)
-        if (response.code in 300..399) throw SessionExpiredException()
+        if (response.code in 300..399 || response.code == SESSION_EXPIRED_CODE) {
+            throw SessionExpiredException()
+        }
         if (!response.isSuccessful) {
             throw JwxtException("请求失败：HTTP ${response.code}")
         }
@@ -362,7 +364,9 @@ class JwxtClient(
 
     private fun postJsonArray(url: HttpUrl, body: FormBody): JSONArray {
         val response = postRaw(url, body)
-        if (response.code in 300..399) throw SessionExpiredException()
+        if (response.code in 300..399 || response.code == SESSION_EXPIRED_CODE) {
+            throw SessionExpiredException()
+        }
         if (!response.isSuccessful) {
             throw JwxtException("请求失败：HTTP ${response.code}")
         }
@@ -440,6 +444,9 @@ class JwxtClient(
 
     companion object {
         private const val MAX_REDIRECTS = 10
+
+        /** 正方教务用非标准状态码 901 表示会话已失效。 */
+        private const val SESSION_EXPIRED_CODE = 901
         const val DEFAULT_BASE_URL = "https://jwxt.gzus.edu.cn/jwglxt"
         const val DEFAULT_CAS_BASE_URL = "https://cas.gzus.edu.cn/lyuapServer"
         const val DEFAULT_SSO_URL = "https://jwxt.gzus.edu.cn/sso/lyiotlogin"

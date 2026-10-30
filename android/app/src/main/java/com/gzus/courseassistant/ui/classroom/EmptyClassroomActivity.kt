@@ -19,7 +19,6 @@ import com.gzus.courseassistant.util.UiUtils
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
-import java.time.format.DateTimeFormatter
 
 /**
  * 空闲教室：按「周次 + 星期 + 节次」查询教务当前空闲的场地。
@@ -117,19 +116,8 @@ class EmptyClassroomActivity : AppCompatActivity() {
         return if (upcoming >= 0) upcoming else 0
     }
 
-    private fun slotLabel(slot: ScheduleLogic.BigSlot): String {
-        val periods = getString(R.string.classroom_slot, slot.startPeriod, slot.endPeriod)
-        val start = slot.start
-        val end = slot.end
-        if (start == null || end == null) return periods
-        return getString(
-            R.string.classroom_slot_with_time,
-            slot.startPeriod,
-            slot.endPeriod,
-            start.format(TIME_FORMATTER),
-            end.format(TIME_FORMATTER),
-        )
-    }
+    private fun slotLabel(slot: ScheduleLogic.BigSlot): String =
+        getString(R.string.classroom_slot, slot.startPeriod, slot.endPeriod)
 
     private fun query() {
         if (loading) return
@@ -180,6 +168,5 @@ class EmptyClassroomActivity : AppCompatActivity() {
 
     private companion object {
         val WEEKDAY_LABELS = listOf("周一", "周二", "周三", "周四", "周五")
-        val TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
     }
 }

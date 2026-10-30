@@ -210,4 +210,29 @@
     <string name="exam_reminder_lead_both">提前 1 天和 3 小时</string>
     <string name="exam_reminder_status_off">未开启</string>
     <string name="more_exam_reminder_status">考试提醒 · %1$s</string>
+    <string name="widget_name">下一节课</string>
+    <string name="more_add_widget">添加桌面小组件</string>
+    <string name="widget_pin_unsupported">当前桌面不支持一键添加，请长按桌面空白处手动添加</string>
+    <string name="widget_pin_requested">已请求添加；若桌面未弹出确认，请长按桌面空白处手动添加</string>
+    <string name="widget_description">显示正在上课与下一节课，点击打开今日课程</string>
+    <string name="widget_label_current">正在上课</string>
+    <string name="widget_label_next">下一节课</string>
+    <string name="widget_label_next_day">下一节课 · %1$s</string>
+    <string name="widget_label_empty">暂无课程</string>
+    <string name="widget_empty_title">还没有课表</string>
+    <string name="widget_empty_hint">打开应用完成同步</string>
+    <string name="widget_no_course_title">最近 7 天没有课</string>
+    <string name="widget_no_course_hint">打开应用查看课表</string>
+    <string name="widget_detail_unknown">上课时间与地点待定</string>
+    <string name="widget_day_tomorrow">明天</string>
+    <string name="widget_day_soon">%1$d 天后</string>
+    <string-array name="widget_weekdays">
+        <item>周一</item>
+        <item>周二</item>
+        <item>周三</item>
+        <item>周四</item>
+        <item>周五</item>
+        <item>周六</item>
+        <item>周日</item>
+    </string-array>
 </resources>

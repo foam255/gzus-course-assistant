@@ -21,6 +21,7 @@ import com.gzus.courseassistant.databinding.FragmentTodayBinding
 import com.gzus.courseassistant.ui.main.MainActivity
 import com.gzus.courseassistant.ui.timetable.CourseDetailDialog
 import com.gzus.courseassistant.util.UiUtils
+import com.gzus.courseassistant.widget.NextCourseWidgetProvider
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -309,6 +310,7 @@ class TodayFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             runCatching { repository.syncAll() }
                 .onFailure { (activity as? MainActivity)?.handleSyncError(it) }
+            context?.let { NextCourseWidgetProvider.refresh(it) }
             syncing = false
             binding?.syncButton?.isEnabled = true
             binding?.swipeRefresh?.isRefreshing = false

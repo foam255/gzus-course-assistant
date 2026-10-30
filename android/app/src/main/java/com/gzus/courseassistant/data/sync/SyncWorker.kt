@@ -6,12 +6,19 @@ import androidx.work.WorkerParameters
 import com.gzus.courseassistant.CourseApplication
 import com.gzus.courseassistant.data.network.JwxtException
 import com.gzus.courseassistant.data.network.SessionExpiredException
+import com.gzus.courseassistant.widget.NextCourseWidgetProvider
 
 class SyncWorker(
     appContext: Context,
     params: WorkerParameters,
 ) : CoroutineWorker(appContext, params) {
-    override suspend fun doWork(): Result {
+    override suspend fun doWork(): Result = try {
+        sync()
+    } finally {
+        NextCourseWidgetProvider.refresh(applicationContext)
+    }
+
+    private suspend fun sync(): Result {
         val application = applicationContext as? CourseApplication ?: return Result.failure()
         val repository = application.container.repository
         if (!repository.hasSession) {

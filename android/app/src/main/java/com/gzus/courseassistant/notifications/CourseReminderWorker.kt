@@ -5,6 +5,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.gzus.courseassistant.CourseApplication
 import com.gzus.courseassistant.data.model.ScheduleLogic
+import com.gzus.courseassistant.widget.NextCourseWidgetProvider
 import java.time.LocalDate
 import java.time.LocalTime
 
@@ -12,7 +13,13 @@ class CourseReminderWorker(
     appContext: Context,
     params: WorkerParameters,
 ) : CoroutineWorker(appContext, params) {
-    override suspend fun doWork(): Result {
+    override suspend fun doWork(): Result = try {
+        remind()
+    } finally {
+        NextCourseWidgetProvider.refresh(applicationContext)
+    }
+
+    private fun remind(): Result {
         val app = applicationContext as? CourseApplication ?: return Result.failure()
         val prefs = app.container.settings
         val minutes = prefs.reminderMinutes

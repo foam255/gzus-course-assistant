@@ -1,6 +1,8 @@
 package com.gzus.courseassistant.ui.more
 
 import android.app.DatePickerDialog
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.DialogInterface
 import android.content.Intent
 import android.net.Uri
@@ -24,6 +26,7 @@ import com.gzus.courseassistant.databinding.FragmentMoreBinding
 import com.gzus.courseassistant.ui.calendar.CalendarActivity
 import com.gzus.courseassistant.ui.main.MainActivity
 import com.gzus.courseassistant.util.UiUtils
+import com.gzus.courseassistant.widget.NextCourseWidgetProvider
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.CancellationException
 import java.time.LocalDate
@@ -54,6 +57,7 @@ class MoreFragment : Fragment() {
         }
         viewBinding.reminderButton.setOnClickListener { showReminderDialog() }
         viewBinding.examReminderButton.setOnClickListener { showExamReminderDialog() }
+        viewBinding.widgetButton.setOnClickListener { addHomeWidget() }
         viewBinding.syncButton.setOnClickListener { syncAll() }
         viewBinding.firstWeekButton.setOnClickListener { showFirstWeekDatePicker() }
         viewBinding.checkUpdateButton.setOnClickListener { checkForUpdates() }
@@ -334,6 +338,18 @@ class MoreFragment : Fragment() {
                 settings.remindedKeys = emptySet()
             }
             .show()
+    }
+
+    private fun addHomeWidget() {
+        val manager = AppWidgetManager.getInstance(requireContext())
+        val provider = ComponentName(requireContext(), NextCourseWidgetProvider::class.java)
+        val requested = manager.isRequestPinAppWidgetSupported &&
+            manager.requestPinAppWidget(provider, null, null)
+        (activity as? MainActivity)?.showMessage(
+            getString(
+                if (requested) R.string.widget_pin_requested else R.string.widget_pin_unsupported,
+            ),
+        )
     }
 
     private fun showExamReminderDialog() {

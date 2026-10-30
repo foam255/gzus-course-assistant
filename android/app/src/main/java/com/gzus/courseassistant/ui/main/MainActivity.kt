@@ -22,6 +22,7 @@ import com.gzus.courseassistant.ui.more.MoreFragment
 import com.gzus.courseassistant.ui.timetable.TimetableFragment
 import com.gzus.courseassistant.ui.today.TodayFragment
 import com.gzus.courseassistant.util.UiUtils
+import com.gzus.courseassistant.widget.NextCourseWidgetProvider
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
@@ -85,6 +86,11 @@ class MainActivity : AppCompatActivity() {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show()
     }
 
+    override fun onResume() {
+        super.onResume()
+        NextCourseWidgetProvider.refresh(this)
+    }
+
     fun openAcademics() {
         binding.bottomNavigation.selectedItemId = R.id.nav_academics
     }
@@ -141,6 +147,7 @@ class MainActivity : AppCompatActivity() {
         if (!stale) return
         lifecycleScope.launch {
             runCatching { repository.syncAll() }
+                .onSuccess { NextCourseWidgetProvider.refresh(this@MainActivity) }
                 .onFailure { error ->
                     if (error !is SessionExpiredException) {
                         showMessage(error.message ?: getString(R.string.net_error))

@@ -7,10 +7,11 @@
 ## 0. 一句话现状
 
 M1（成绩/GPA 分析 + 考试倒计时提醒，v1.3.3）、M2（桌面「下一节课」小组件，v1.3.4）、
-M3（空闲教室查询，v1.3.5）代码全部写完并分别提交（`f1c3632`、`8358323`、本次）；
-`testDebugUnitTest` 70 个用例、`lintDebug`、`assembleRelease` 全绿。
-**v1.3.5 的 release 包已构建但还没装机走查**（验证时手机 USB 掉线），
-需要插上手机后复验「空闲教室」页与登录页验证码尺寸。
+M3（空闲教室查询，v1.3.5）代码全部写完、验证通过并分别提交
+（`f1c3632`、`8358323`、`8725d68` + `edb43c2`）；
+`testDebugUnitTest` 70 个用例、`lintDebug`、`assembleRelease` 全绿，
+v1.3.5 已装到真机并完成走查（空闲教室列表与验证码尺寸均已确认）。
+剩下只有「打 tag 发 Release」这一件需要人工做的事。
 
 ## 1. 接手前必读的环境事实
 
@@ -58,6 +59,14 @@ M3（空闲教室查询，v1.3.5）代码全部写完并分别提交（`f1c3632`
     等会话出现最省事。
 12. `:app:minifyReleaseWithR8` 偶发无故失败（重跑即成功），先 `> /tmp/build.log 2>&1`
     再 `grep -a`，否则 grep 会把输出当二进制。
+13. 这台机器的 USB 连接很不稳（会突然 `adb devices` 为空）。掉线时可让用户开
+    **无线调试**，拿到 `IP:端口` 后 `adb connect <ip>:port` 即可；注意本会话的 adb
+    daemon 会在每条命令结束时被回收，所以**每条命令都要先 `adb connect`** 再操作。
+14. `adb pull` 的目标路径必须写 **Windows 路径**（`G:/...`），写 `/g/...` 会报
+    `cannot create file/directory`；`screencap` 用 `shell screencap -p /sdcard/x.png`
+    再 `pull` 比 `exec-out` 更稳。
+15. 登录页有 `FLAG_SECURE`，对它截图会得到 0 字节文件；要量尺寸请用
+    `uiautomator dump` 读 bounds。
 
 ## 2. 已完成的工作
 
@@ -154,7 +163,9 @@ form: xnm=2026  xqm=3  xqh_id=<校区id，空=全部>
 | `./gradlew.bat testDebugUnitTest` | ✅ **70 个用例全过**（GradeStats 8 + ExamSchedule 10 + ExamReminderPlanner 7 + WidgetCoursePlanner 7 + ClassroomParsing 4 + 原有 34） |
 | `./gradlew.bat lintDebug` | ✅ BUILD SUCCESSFUL（`abortOnError=true`，零 error） |
 | `./gradlew.bat assembleRelease` | ✅ `app-release.apk` 2.1 MB，release 签名（v1.3.5 / versionCode 9） |
-| 真机安装 | ⚠️ v1.3.4 已装；**v1.3.5 未装机**——构建时手机 USB 掉线，`adb devices` 为空 |
+| 真机安装 | ✅ `adb install -r` 保留数据，已升级 v1.3.5（versionCode 9） |
+| 空闲教室真机走查 | ✅ 「更多 → 查询空闲教室」默认定位周五/第9-10节，显示 255 间；切周一 174 间；切第1-2节 **194 间**，与 Python 抓包结果完全一致（校区、周次、节次位掩码都对） |
+| 验证码尺寸 | ✅ 登录页有 `FLAG_SECURE` 不能截图，改用 `uiautomator dump` 量控件：`captchaCard` 440×110 px = 160dp×40dp（4:1），`captchaImage` 与卡片同 bounds（完全铺满） |
 | M1 两处修复复验 | ✅ 趋势图首尾标签 `2.20 / 24-25-2`、`2.82 / 25-26-2` 完整；考试提醒弹窗单选列表正常 |
 | 小组件渲染 | ✅ 临时预览页实机渲染：`下一节课 / 大学日语IV / 17:00-18:20 · 广州校区 T105` |
 | 小组件上桌面 | ⚠️ **未能完成**：MIUI 面板要联网（恒「网络异常」），`requestPinAppWidget` 被 MIUI 拒绝（见坑 8）。需在原生桌面或换桌面启动器再验 |
@@ -165,24 +176,12 @@ form: xnm=2026  xqm=3  xqh_id=<校区id，空=全部>
 
 ## 4. 待办
 
-### 1. 装机复验 v1.3.5（必须先做）
-
-```powershell
-$adb='C:\Users\255\AppData\Local\Android\Sdk\platform-tools\adb.exe'
-cd G:\weixingkebiao\android; .\gradlew.bat assembleRelease --console=plain
-& $adb install -r app\build\outputs\apk\release\app-release.apk
-& $adb shell am start -W -n com.gzus.courseassistant/.ui.main.MainActivity
-```
-
-1. 「更多 → 查询空闲教室」：默认定位到今天与当前节次，列表显示 教室号/座位数/场地名称/
-   校区·教学楼·类别；切换星期或节次会重新查询；标题显示「第 N 周 周X 第a-b节 · 共 N 间空闲」。
-2. 「更多 → 更新登录会话」：确认验证码图片铺满整张卡片、不再上下留白。
-
-### 2. 发布（用户手动）
+### 1. 发布（用户手动）
 
 - 打 `v1.3.5` tag 并上传 `app-release.apk` 到 GitHub Releases（README 里有流程）。
+- 代码侧已完成并走查通过，不需要再改代码。
 
-### 3. 可选后续
+### 2. 可选后续
 
 - 空闲教室支持按校区 / 教学楼 / 座位数筛选（接口已支持 `xqh_id` / `lh` / `qszws` / `jszws`）。
 - 桌面小组件在原生桌面（非 MIUI）上做一次上桌面验收。

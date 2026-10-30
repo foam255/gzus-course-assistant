@@ -4,6 +4,7 @@ import android.app.Application
 import com.gzus.courseassistant.data.local.AppSettings
 import com.gzus.courseassistant.data.local.SecureFileStore
 import com.gzus.courseassistant.data.model.AppState
+import com.gzus.courseassistant.data.model.Classroom
 import com.gzus.courseassistant.data.model.JsonCodec
 import com.gzus.courseassistant.data.model.ScheduleSnapshot
 import com.gzus.courseassistant.data.model.SyncSummary
@@ -299,7 +300,41 @@ class AppRepository(
         _state.value = state
     }
 
+    /**
+     * 查询指定周次、星期与节次下的空闲教室。
+     *
+     * 结果只在内存缓存 5 分钟，不写入 state.json，避免频繁打扰教务。
+     */
+    suspend fun emptyClassrooms(
+        term: Term,
+        week: Int,
+        weekdays: List<Int>,
+        periods: List<Int>,
+    ): List<Classroom> = withContext(Dispatchers.IO) {
+        val key = listOf(
+            term.label,
+            week,
+            weekdays.joinToString(","),
+            periods.joinToString(","),
+        ).joinToString("|")
+        val now = System.currentTimeMillis()
+        classroomCache[key]?.takeIf { now - it.at < CLASSROOM_CACHE_MS }?.let {
+            return@withContext it.items
+        }
+        val items = client.fetchEmptyClassrooms(term, week, weekdays, periods)
+        classroomCache[key] = CachedClassrooms(now, items)
+        items
+    }
+
+    private data class CachedClassrooms(
+        val at: Long,
+        val items: List<Classroom>,
+    )
+
+    private val classroomCache = java.util.concurrent.ConcurrentHashMap<String, CachedClassrooms>()
+
     private companion object {
         const val STATE_FILE = "state.json"
+        const val CLASSROOM_CACHE_MS = 5 * 60 * 1000L
     }
 }

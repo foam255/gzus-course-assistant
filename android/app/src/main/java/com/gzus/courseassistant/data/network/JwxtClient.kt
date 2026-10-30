@@ -2,6 +2,7 @@ package com.gzus.courseassistant.data.network
 
 import com.gzus.courseassistant.data.model.CalendarEntry
 import com.gzus.courseassistant.data.model.CaptchaChallenge
+import com.gzus.courseassistant.data.model.Classroom
 import com.gzus.courseassistant.data.model.Exam
 import com.gzus.courseassistant.data.model.Grade
 import com.gzus.courseassistant.data.model.ScheduleSnapshot
@@ -165,6 +166,7 @@ class JwxtClient(
         ).also {
             lastStudentName = parsed.studentName
             lastAvailableTerms = termPage.terms
+            lastCampusId = parsed.campusId
         }
     }
 
@@ -238,6 +240,47 @@ class JwxtClient(
         private set
     var lastAvailableTerms: List<Term> = emptyList()
         private set
+
+    /** 最近一次同步得到的校区 id，用于空闲教室查询；未知时留空表示查询全部校区。 */
+    var lastCampusId: String = ""
+        private set
+
+    fun fetchEmptyClassrooms(
+        term: Term,
+        week: Int,
+        weekdays: List<Int>,
+        periods: List<Int>,
+        keyword: String = "",
+    ): List<Classroom> {
+        val target = url("/cdjy/cdjy_cxKxcdlb.html").newBuilder()
+            .addQueryParameter("doType", "query")
+            .addQueryParameter("gnmkdm", "N2155")
+            .build()
+        val form = FormBody.Builder()
+            .add("xnm", term.xnm)
+            .add("xqm", term.xqm)
+            .add("xqh_id", lastCampusId)
+            .add("cdlb_id", "")
+            .add("cdejlb_id", "")
+            .add("cdmc", keyword.trim())
+            .add("cd_id", "")
+            .add("lh", "")
+            .add("qszws", "")
+            .add("jszws", "")
+            .add("jyfs", "0")
+            .add("cdjylx", "")
+            .add("zcd", weekMask(week).toString())
+            .add("xqj", weekdays.joinToString(","))
+            .add("jcd", periodMask(periods).toString())
+            .add("queryModel.showCount", "500")
+            .build()
+        return JwxtParsers.parseClassrooms(postJsonObject(target, form))
+    }
+
+    private fun weekMask(week: Int): Int = if (week in 1..31) 1 shl (week - 1) else 0
+
+    private fun periodMask(periods: List<Int>): Int =
+        periods.filter { it in 1..31 }.fold(0) { mask, period -> mask or (1 shl (period - 1)) }
 
     private fun requestServiceTicket(tgt: String): String {
         val body = FormBody.Builder()

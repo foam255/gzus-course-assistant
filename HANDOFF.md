@@ -6,11 +6,11 @@
 
 ## 0. 一句话现状
 
-M1（成绩/GPA 分析 + 考试倒计时提醒，v1.3.3）与 M2（桌面「下一节课」小组件，v1.3.4）
-代码全部写完、验证通过并已分别提交（`f1c3632`、`8358323`）；
-`testDebugUnitTest` 66 个用例、`lintDebug`、`assembleRelease` 全绿，
-release 包已覆盖安装到真机并走查。
-**M3（空闲教室）尚未开工**，其在线部分依赖用户重新登录教务后抓包。
+M1（成绩/GPA 分析 + 考试倒计时提醒，v1.3.3）、M2（桌面「下一节课」小组件，v1.3.4）、
+M3（空闲教室查询，v1.3.5）代码全部写完并分别提交（`f1c3632`、`8358323`、本次）；
+`testDebugUnitTest` 70 个用例、`lintDebug`、`assembleRelease` 全绿。
+**v1.3.5 的 release 包已构建但还没装机走查**（验证时手机 USB 掉线），
+需要插上手机后复验「空闲教室」页与登录页验证码尺寸。
 
 ## 1. 接手前必读的环境事实
 
@@ -53,6 +53,11 @@ release 包已覆盖安装到真机并走查。
    把 `RemoteViews` 用 `apply()` 渲染出来截图，验收后已删除（不要把它留在代码里）。
 10. 走查点击用 `adb shell input tap`，坐标要用 `uiautomator dump` 里的真实 bounds，
     别按缩放后的截图目测（`input tap` 用的是 1080×2400 物理像素）。
+11. **教务会话空闲超时只有几分钟**：网页端登录后要立刻抓包，否则 `data/session.cookies.json`
+    很快失效；退出登录时该文件会被直接删掉。用 `qa/probe_empty_classroom.py --wait 900`
+    等会话出现最省事。
+12. `:app:minifyReleaseWithR8` 偶发无故失败（重跑即成功），先 `> /tmp/build.log 2>&1`
+    再 `grep -a`，否则 grep 会把输出当二进制。
 
 ## 2. 已完成的工作
 
@@ -94,7 +99,43 @@ release 包已覆盖安装到真机并走查。
   `AppWidgetManager.requestPinAppWidget`，无论成功与否都提示「若桌面未弹出确认，请长按桌面空白处手动添加」。
 - `strings.xml` 新增 `widget_*`、`more_add_widget`、`widget_pin_*`（含 `widget_weekdays` 数组）。
 
-### 2.3 已修的 bug（不要回退）
+### 2.3 M3：空闲教室（v1.3.5）
+
+**接口已抓包确认**（`qa/empty-classroom-page.html`、`qa/kxcdlb.js` 为证据）：
+
+```
+POST /jwglxt/cdjy/cdjy_cxKxcdlb.html?doType=query&gnmkdm=N2155
+form: xnm=2026  xqm=3  xqh_id=<校区id，空=全部>
+      cdlb_id= cdejlb_id= cdmc= cd_id= lh= qszws= jszws=   (空=不过滤)
+      jyfs=0                       # 按周次借用
+      zcd=<周次位掩码>              # 第 9 周 = 1<<8 = 256
+      xqj=1,2,3,4,5                # 星期列表
+      jcd=<节次位掩码>              # 第 1-2 节 = 1|2 = 3
+      queryModel.showCount=500     # 不传则每页 10 条，且 page/rows 无效
+返回: {"totalResult":"194","items":[{cd_id,cdbh,cdmc,cdjc,jxlmc,cdlbmc,xqmc,zws,...}]}
+```
+
+已验证筛选真实生效：周一 1-2 节 194 间 → 同一周 1-12 节 115 间 → 全部 20 周 165 间；
+`xqh_id` 空串 = 广州 196 + 江门 160 共 356 间。
+
+新增：
+
+- `data/model/Models.kt`：`Classroom(id, code, name, building, category, campus, seats)`。
+- `data/network/JwxtParsers.kt`：`parseClassrooms(payload)`，按 校区→教学楼→教室号 排序。
+- `data/network/JwxtClient.kt`：`fetchEmptyClassrooms(term, week, weekdays, periods)`、
+  `weekMask` / `periodMask`（位掩码），新增 `lastCampusId`（`fetchSchedule` 时记录）。
+- `data/sync/AppRepository.kt`：`emptyClassrooms(...)`，`ConcurrentHashMap` 内存缓存 5 分钟，
+  不写 state.json。
+- `ui/classroom/EmptyClassroomActivity.kt` + `ClassroomAdapter.kt` +
+  `res/layout/activity_empty_classroom.xml` + `item_classroom.xml`：
+  顶部「星期」「节次」两个 Spinner（默认定位到今天 / 当前节次），自动查询；
+  列表行显示 教室号 + 座位数 + 场地名称 + 校区·教学楼·类别；
+  空态「该时段没有空闲教室」，会话失效时提示重新登录。
+- `MoreFragment` + `fragment_more.xml`：校历下方新增「查询空闲教室」入口。
+- `ClassroomParsingTest.kt`（4 个用例）。
+- `qa/probe_empty_classroom.py`：取证脚本，支持 `--wait <秒>` 等待有效会话后自动抓包。
+
+### 2.4 已修的 bug（不要回退）
 
 - `ExamSchedule.ParsedStart` 误用 `.first/.second` → `.time/.hasTime`。
 - `TrendChartView` 引用 `R.string.gpa_trend_empty` → `analysis_gpa_trend_empty`。
@@ -102,15 +143,18 @@ release 包已覆盖安装到真机并走查。
 - 「课程性质」→ 实际数据是 `ksxz`，已改「考试性质」。
 - 考试提醒弹窗 `setMessage` + `setSingleChoiceItems` 冲突 → 去掉 `setMessage`。
 - 小组件地点重复：`room` 已含校区前缀，改为 `room.contains(campus)` 时不再拼接。
+- 登录页验证码「太小、没撑满框」：原图 100×25（4:1），卡片却是 132dp×56dp 且用
+  `centerInside`，上下留白 → 卡片改 160dp×40dp（4:1）+ `fitXY` + padding 2dp，
+  行内改 `center_vertical`。
 
 ## 3. 验证记录
 
 | 检查 | 结果 |
 | --- | --- |
-| `./gradlew.bat testDebugUnitTest` | ✅ **66 个用例全过**（GradeStats 8 + ExamSchedule 10 + ExamReminderPlanner 7 + WidgetCoursePlanner 7 + 原有 34） |
+| `./gradlew.bat testDebugUnitTest` | ✅ **70 个用例全过**（GradeStats 8 + ExamSchedule 10 + ExamReminderPlanner 7 + WidgetCoursePlanner 7 + ClassroomParsing 4 + 原有 34） |
 | `./gradlew.bat lintDebug` | ✅ BUILD SUCCESSFUL（`abortOnError=true`，零 error） |
-| `./gradlew.bat assembleRelease` | ✅ `app-release.apk` 2.1 MB，release 签名 |
-| 真机安装 | ✅ `adb install -r` 保留数据，已升级 v1.3.4（versionCode 8） |
+| `./gradlew.bat assembleRelease` | ✅ `app-release.apk` 2.1 MB，release 签名（v1.3.5 / versionCode 9） |
+| 真机安装 | ⚠️ v1.3.4 已装；**v1.3.5 未装机**——构建时手机 USB 掉线，`adb devices` 为空 |
 | M1 两处修复复验 | ✅ 趋势图首尾标签 `2.20 / 24-25-2`、`2.82 / 25-26-2` 完整；考试提醒弹窗单选列表正常 |
 | 小组件渲染 | ✅ 临时预览页实机渲染：`下一节课 / 大学日语IV / 17:00-18:20 · 广州校区 T105` |
 | 小组件上桌面 | ⚠️ **未能完成**：MIUI 面板要联网（恒「网络异常」），`requestPinAppWidget` 被 MIUI 拒绝（见坑 8）。需在原生桌面或换桌面启动器再验 |
@@ -121,29 +165,27 @@ release 包已覆盖安装到真机并走查。
 
 ## 4. 待办
 
-### M3 空闲教室查询（目标 v1.3.5）
+### 1. 装机复验 v1.3.5（必须先做）
 
-- 入口已确证：`qa/jwxt-index-menu.html` 原文
-  `clickMenu('N2155','/cdjy/cdjy_cxKxcdlb.html','查询空闲教室','null')` → 页面
-  `https://jwxt.gzus.edu.cn/jwglxt/cdjy/cdjy_cxKxcdlb.html`，`gnmkdm=N2155`。
-- **查询 POST 表单字段未知，禁止按猜测写死**。当前 Cookie 已过期，必须：
-  1. 让用户先在 App 或网页端重新登录教务；
-  2. 写取证脚本 `qa/probe_empty_classroom.py`（复用 `jwglxt.py` 的
-     `JwglxtClient.import_cookies`）或 `qa/inspect-empty-classroom.mjs`
-     （照抄 `qa/inspect-jwxt-timetable.mjs` 的 Playwright 抓包结构）；
-  3. 拿到真实 POST 路径 + form 字段后再实现解析。
-- 网络层照现有风格：`JwxtClient.fetchEmptyClassrooms(...)`、
-  `JwxtParsers.parseEmptyClassrooms(payload)`、`Models.kt` 加 `Classroom(...)`；
-  `AppRepository` 不写 state.json，内存缓存 5 分钟。
-- 零风险降级（**没抓到包也必须交付**）：「我的空闲时段」——纯本地用现有课表推算
-  本周每天的空课区间，与在线结果同页展示。
-- 入口放 `MoreFragment`（不动底部 tab）；新增
-  `ui/classroom/EmptyClassroomActivity.kt` + `activity_empty_classroom.xml` + `item_classroom.xml`。
-- 注意 `data/session.cookies.json` 已是过期状态，网页服务也未启动（8765 端口）。
+```powershell
+$adb='C:\Users\255\AppData\Local\Android\Sdk\platform-tools\adb.exe'
+cd G:\weixingkebiao\android; .\gradlew.bat assembleRelease --console=plain
+& $adb install -r app\build\outputs\apk\release\app-release.apk
+& $adb shell am start -W -n com.gzus.courseassistant/.ui.main.MainActivity
+```
 
-### 发布（用户手动）
+1. 「更多 → 查询空闲教室」：默认定位到今天与当前节次，列表显示 教室号/座位数/场地名称/
+   校区·教学楼·类别；切换星期或节次会重新查询；标题显示「第 N 周 周X 第a-b节 · 共 N 间空闲」。
+2. 「更多 → 更新登录会话」：确认验证码图片铺满整张卡片、不再上下留白。
 
-- 打 `v1.3.4` tag 并上传 `app-release.apk` 到 GitHub Releases（README 里有流程）。
+### 2. 发布（用户手动）
+
+- 打 `v1.3.5` tag 并上传 `app-release.apk` 到 GitHub Releases（README 里有流程）。
+
+### 3. 可选后续
+
+- 空闲教室支持按校区 / 教学楼 / 座位数筛选（接口已支持 `xqh_id` / `lh` / `qszws` / `jszws`）。
+- 桌面小组件在原生桌面（非 MIUI）上做一次上桌面验收。
 
 ## 5. 明确不要做的事
 
@@ -169,6 +211,8 @@ release 包已覆盖安装到真机并走查。
 | 后台任务注册 | `.../CourseApplication.kt`（`scheduleWorkers()`） |
 | 通知 | `.../notifications/NotificationHelper.kt`、`CourseReminderWorker.kt`、`ExamReminderWorker.kt` |
 | 小组件 | `.../widget/{WidgetCoursePlanner,NextCourseWidgetProvider}.kt` + `res/xml/widget_next_course_info.xml` |
+| 空闲教室 | `.../ui/classroom/{EmptyClassroomActivity,ClassroomAdapter}.kt` + `.../data/network/JwxtClient.kt#fetchEmptyClassrooms` |
+| 取证脚本 | `qa/probe_empty_classroom.py`（`--wait 900` 可等待登录后自动抓包） |
 | 学业页 | `.../ui/academics/{AcademicsFragment,GradeAdapter,ExamAdapter,TrendChartView,ExamDetailDialog}.kt` |
 | 今日页 | `.../ui/today/TodayFragment.kt` |
 | 更多页 | `.../ui/more/MoreFragment.kt` |

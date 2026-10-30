@@ -24,6 +24,7 @@ import com.gzus.courseassistant.data.update.UpdateInfo
 import com.gzus.courseassistant.databinding.DialogUpdateProgressBinding
 import com.gzus.courseassistant.databinding.FragmentMoreBinding
 import com.gzus.courseassistant.ui.calendar.CalendarActivity
+import com.gzus.courseassistant.ui.classroom.EmptyClassroomActivity
 import com.gzus.courseassistant.ui.main.MainActivity
 import com.gzus.courseassistant.util.UiUtils
 import com.gzus.courseassistant.widget.NextCourseWidgetProvider
@@ -54,6 +55,9 @@ class MoreFragment : Fragment() {
         viewBinding.versionText.text = getString(R.string.version_format, BuildConfig.VERSION_NAME)
         viewBinding.calendarButton.setOnClickListener {
             startActivity(Intent(requireContext(), CalendarActivity::class.java))
+        }
+        viewBinding.classroomButton.setOnClickListener {
+            startActivity(Intent(requireContext(), EmptyClassroomActivity::class.java))
         }
         viewBinding.reminderButton.setOnClickListener { showReminderDialog() }
         viewBinding.examReminderButton.setOnClickListener { showExamReminderDialog() }

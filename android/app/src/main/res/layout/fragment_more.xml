@@ -80,6 +80,18 @@
             app:iconTint="@color/ink" />
 
         <com.google.android.material.button.MaterialButton
+            android:id="@+id/classroomButton"
+            style="@style/Widget.CourseAssistant.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="start|center_vertical"
+            android:text="@string/more_empty_classroom"
+            app:icon="@drawable/ic_school"
+            app:iconGravity="textStart"
+            app:iconTint="@color/ink" />
+
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/reminderButton"
             style="@style/Widget.CourseAssistant.OutlinedButton"
             android:layout_width="match_parent"

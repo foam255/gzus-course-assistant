@@ -132,6 +132,17 @@ data class CalendarEntry(
     val localFile: String,
 )
 
+/** 空闲教室查询结果中的一间教室。 */
+data class Classroom(
+    val id: String,
+    val code: String,
+    val name: String,
+    val building: String,
+    val category: String,
+    val campus: String,
+    val seats: String,
+)
+
 data class AppState(
     val schemaVersion: Int = 1,
     val selectedTerm: String = "",

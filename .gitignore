@@ -11,6 +11,7 @@ qa/
 
 .gradle-test.log
 android/.kotlin/
+.workbuddy-ai/
 
 .DS_Store
 Thumbs.db

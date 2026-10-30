@@ -79,7 +79,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:gravity="top"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <com.google.android.material.textfield.TextInputLayout
@@ -102,8 +102,8 @@
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/captchaCard"
-                android:layout_width="132dp"
-                android:layout_height="56dp"
+                android:layout_width="160dp"
+                android:layout_height="40dp"
                 android:layout_marginStart="8dp"
                 android:clickable="true"
                 android:focusable="true"
@@ -122,8 +122,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:contentDescription="@string/captcha"
-                        android:padding="4dp"
-                        android:scaleType="centerInside" />
+                        android:padding="2dp"
+                        android:scaleType="fitXY" />
 
                     <TextView
                         android:id="@+id/captchaPlaceholder"

@@ -24,6 +24,11 @@
             android:exported="false" />
 
         <activity
+            android:name=".ui.classroom.EmptyClassroomActivity"
+            android:exported="false"
+            android:label="@string/classroom_title" />
+
+        <activity
             android:name=".ui.login.LoginActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />

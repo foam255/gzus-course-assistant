@@ -1,6 +1,7 @@
 package com.gzus.courseassistant.data.network
 
 import com.gzus.courseassistant.data.model.CalendarEntry
+import com.gzus.courseassistant.data.model.Classroom
 import com.gzus.courseassistant.data.model.Course
 import com.gzus.courseassistant.data.model.CourseNormalizer
 import com.gzus.courseassistant.data.model.Exam
@@ -169,6 +170,29 @@ object JwxtParsers {
                 )
             }
         }.sortedWith(compareBy<Exam> { it.date }.thenBy { it.time })
+    }
+
+    fun parseClassrooms(payload: JSONObject): List<Classroom> {
+        val items = payload.optJSONArray("items") ?: return emptyList()
+        return (0 until items.length()).mapNotNull { index ->
+            items.optJSONObject(index)?.let { row ->
+                val code = first(row, "cdbh", "cdmc")
+                if (code.isBlank()) return@let null
+                Classroom(
+                    id = first(row, "cd_id"),
+                    code = code,
+                    name = first(row, "cdjc"),
+                    building = first(row, "jxlmc", "jxl"),
+                    category = first(row, "cdlbmc"),
+                    campus = first(row, "xqmc"),
+                    seats = first(row, "zws", "kszws1"),
+                )
+            }
+        }.sortedWith(
+            compareBy<Classroom> { it.campus }
+                .thenBy { it.building }
+                .thenBy { it.code },
+        )
     }
 
     fun parseCalendar(payload: JSONArray): List<CalendarEntry> {
